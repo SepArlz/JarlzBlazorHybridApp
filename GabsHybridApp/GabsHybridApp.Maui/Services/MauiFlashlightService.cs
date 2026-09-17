@@ -1,4 +1,4 @@
-﻿using GabsHybridApp.Shared.Services;
+using GabsHybridApp.Shared.Services;
 using Microsoft.Maui.ApplicationModel;
 
 namespace GabsHybridApp.Maui.Services;
@@ -63,22 +63,31 @@ public sealed class MauiFlashlightService : IFlashlightService
 
     private static string? FindTorchCameraId(Android.Hardware.Camera2.CameraManager camMgr)
     {
+        var cameraIds = camMgr.GetCameraIdList();
+        if (cameraIds == null) return null;
+
+        var flashKey = Android.Hardware.Camera2.CameraCharacteristics.FlashInfoAvailable;
+        var lensFacingKey = Android.Hardware.Camera2.CameraCharacteristics.LensFacing;
+
         // Prefer a back-facing camera with flash
-        foreach (var id in camMgr.GetCameraIdList())
+        foreach (var id in cameraIds)
         {
+            if (id == null) continue;
             var chars = camMgr.GetCameraCharacteristics(id);
-            var hasFlash = (bool?)chars.Get(Android.Hardware.Camera2.CameraCharacteristics.FlashInfoAvailable) == true;
-            var facing = (Java.Lang.Integer?)chars.Get(Android.Hardware.Camera2.CameraCharacteristics.LensFacing);
-            if (hasFlash && facing != null &&
-                facing.IntValue() == (int)Android.Hardware.Camera2.LensFacing.Back)
+            if (chars == null) continue;
+            var hasFlash = flashKey is { } fk && chars.Get(fk) is Java.Lang.Boolean b && b.BooleanValue();
+            var isBackFacing = lensFacingKey is { } lk && chars.Get(lk) is Java.Lang.Integer facing && facing.IntValue() == (int)Android.Hardware.Camera2.LensFacing.Back;
+            if (hasFlash && isBackFacing)
                 return id;
         }
 
         // Fallback: any camera that reports a flash
-        foreach (var id in camMgr.GetCameraIdList())
+        foreach (var id in cameraIds)
         {
+            if (id == null) continue;
             var chars = camMgr.GetCameraCharacteristics(id);
-            var hasFlash = (bool?)chars.Get(Android.Hardware.Camera2.CameraCharacteristics.FlashInfoAvailable) == true;
+            if (chars == null) continue;
+            var hasFlash = flashKey is { } fk && chars.Get(fk) is Java.Lang.Boolean b && b.BooleanValue();
             if (hasFlash) return id;
         }
         return null;

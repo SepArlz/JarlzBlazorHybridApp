@@ -1,0 +1,328 @@
+@page "/orders"
+@using GabsHybridApp.Shared.Models
+@using GabsHybridApp.Shared.Services
+@using GabsHybridApp.Shared.Components.Orders
+@using MudBlazor
+@inject IOrderService OrderService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager
+
+<PageTitle>Product Orders - Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="px-0 mt-4 mb-8">
+    <!-- Page Hero Header -->
+    <div class="d-flex justify-space-between align-center mb-4 flex-wrap gap-2">
+        <div class="d-flex align-center gap-3">
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Large" />
+            </MudAvatar>
+            <div>
+                <MudText Typo="Typo.h5" Class="font-weight-bold">Product Orders</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Commercial Sales, POS Tickets & Fulfillment Operations</MudText>
+            </div>
+        </div>
+
+        <div class="d-flex align-center gap-2 flex-wrap">
+            <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.Bolt" Size="Size.Small" OnClick="OpenQuickOrderDialog">
+                Quick Counter Order
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="OpenNewOrderDialog">
+                New Order
+            </MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" Size="Size.Small" OnClick="LoadDataAsync" />
+        </div>
+    </div>
+
+    <!-- Summary Metrics Cards -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="6" sm="3">
+            <MudPaper Outlined="true" Class="pa-3 rounded-lg">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total Orders</MudText>
+                        <MudText Typo="Typo.h5" Class="font-weight-bold">@_summary.TotalOrders</MudText>
+                    </div>
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Medium">
+                        <MudIcon Icon="@Icons.Material.Filled.Receipt" Size="Size.Small" />
+                    </MudAvatar>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Outlined="true" Class="pa-3 rounded-lg">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Pending</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Warning" Class="font-weight-bold">@_summary.PendingOrders</MudText>
+                    </div>
+                    <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Medium">
+                        <MudIcon Icon="@Icons.Material.Filled.PendingActions" Size="Size.Small" />
+                    </MudAvatar>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Outlined="true" Class="pa-3 rounded-lg">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Delivered</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success" Class="font-weight-bold">@_summary.DeliveredOrders</MudText>
+                    </div>
+                    <MudAvatar Color="Color.Success" Variant="Variant.Outlined" Size="Size.Medium">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                    </MudAvatar>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Outlined="true" Class="pa-3 rounded-lg">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total Revenue</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Info" Class="font-weight-bold">@_summary.TotalRevenue.ToString("C")</MudText>
+                    </div>
+                    <MudAvatar Color="Color.Info" Variant="Variant.Outlined" Size="Size.Medium">
+                        <MudIcon Icon="@Icons.Material.Filled.MonetizationOn" Size="Size.Small" />
+                    </MudAvatar>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Filters & Chipset Toolbar -->
+    <MudPaper Elevation="1" Class="pa-3 mb-4 rounded-lg">
+        <div class="d-flex flex-wrap align-center justify-space-between gap-3">
+            <!-- Search field -->
+            <div style="min-width: 260px; max-width: 360px;" class="flex-grow-1">
+                <MudTextField @bind-Value="_filter.SearchTerm" Placeholder="Search order #, customer, phone..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="false" DebounceInterval="400" OnDebounceIntervalElapsed="LoadDataAsync" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" OnClearButtonClick="LoadDataAsync" />
+            </div>
+
+            <!-- Status Filter Chips -->
+            <div class="d-flex align-center gap-1 flex-wrap">
+                <MudChip T="string" Color="@(_filter.Status == null ? Color.Primary : Color.Default)" Variant="@(_filter.Status == null ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter(null))">
+                    All
+                </MudChip>
+                <MudChip T="string" Color="@(_filter.Status == "Pending" ? Color.Warning : Color.Default)" Variant="@(_filter.Status == "Pending" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Pending"))">
+                    Pending
+                </MudChip>
+                <MudChip T="string" Color="@(_filter.Status == "Processing" ? Color.Info : Color.Default)" Variant="@(_filter.Status == "Processing" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Processing"))">
+                    Processing
+                </MudChip>
+                <MudChip T="string" Color="@(_filter.Status == "Shipped" ? Color.Secondary : Color.Default)" Variant="@(_filter.Status == "Shipped" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Shipped"))">
+                    Shipped
+                </MudChip>
+                <MudChip T="string" Color="@(_filter.Status == "Delivered" ? Color.Success : Color.Default)" Variant="@(_filter.Status == "Delivered" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Delivered"))">
+                    Delivered
+                </MudChip>
+                <MudChip T="string" Color="@(_filter.Status == "Cancelled" ? Color.Error : Color.Default)" Variant="@(_filter.Status == "Cancelled" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Cancelled"))">
+                    Cancelled
+                </MudChip>
+            </div>
+        </div>
+    </MudPaper>
+
+    <!-- Orders Table (Supports Mobile Receipt Card Mode) -->
+    <MudTable Items="_orders" Loading="_isLoading" Elevation="1" Class="rounded-lg" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Order #</MudTh>
+            <MudTh>Date</MudTh>
+            <MudTh>Customer</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Payment</MudTh>
+            <MudTh Style="text-align: center;">Items</MudTh>
+            <MudTh Style="text-align: right;">Total Amount</MudTh>
+            <MudTh Style="text-align: right; min-width: 140px;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Order #">
+                <div class="d-flex align-center gap-1">
+                    <MudIcon Icon="@Icons.Material.Filled.Receipt" Size="Size.Small" Color="Color.Primary" />
+                    <span class="font-weight-bold">@context.OrderNumber</span>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Date">
+                @context.OrderDateUtc.ToLocalTime().ToString("MMM dd, yyyy HH:mm")
+            </MudTd>
+            <MudTd DataLabel="Customer">
+                <div>
+                    <div class="font-weight-bold">@context.CustomerName</div>
+                    @if (!string.IsNullOrWhiteSpace(context.CustomerPhone))
+                    {
+                        <div class="mud-text-secondary" style="font-size: 0.75rem;">@context.CustomerPhone</div>
+                    }
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small" Variant="Variant.Filled">
+                    @context.Status
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Payment">
+                <div>
+                    <div>@context.PaymentMethod</div>
+                    <MudChip T="string" Color="@(context.PaymentStatus == "Paid" ? Color.Success : Color.Warning)" Size="Size.Small" Variant="Variant.Text" Class="pa-0 ma-0">
+                        @context.PaymentStatus
+                    </MudChip>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Items" Style="text-align: center;">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@context.Items.Count</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Total Amount" Style="text-align: right;">
+                <span class="font-weight-bold" style="color: var(--mud-palette-primary);">@context.TotalAmount.ToString("C")</span>
+            </MudTd>
+            <MudTd DataLabel="Actions" Style="text-align: right;">
+                <MudButtonGroup Size="Size.Small" Variant="Variant.Text">
+                    <MudTooltip Text="Print Commercial Invoice">
+                        <MudIconButton Icon="@Icons.Material.Filled.ReceiptLong" Color="Color.Info" OnClick="@(() => OpenInvoicePrintDialog(context))" />
+                    </MudTooltip>
+                    <MudTooltip Text="Edit Order Details">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditOrderDialog(context))" />
+                    </MudTooltip>
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Dense="true" AnchorOrigin="Origin.BottomRight">
+                        <MudMenuItem Icon="@Icons.Material.Filled.LocalShipping" OnClick="@(() => UpdateOrderStatus(context, "Shipped"))">Mark Shipped</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.CheckCircle" OnClick="@(() => UpdateOrderStatus(context, "Delivered"))">Mark Delivered</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Cancel" OnClick="@(() => UpdateOrderStatus(context, "Cancelled"))">Mark Cancelled</MudMenuItem>
+                        <MudDivider />
+                        <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="@(() => DeleteOrderAsync(context))">Delete Order</MudMenuItem>
+                    </MudMenu>
+                </MudButtonGroup>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <div class="d-flex flex-column align-center justify-center py-8 text-secondary">
+                <MudIcon Icon="@Icons.Material.Filled.ShoppingBag" Size="Size.Large" Class="mb-2" />
+                <MudText Typo="Typo.subtitle1">No orders found.</MudText>
+                <MudText Typo="Typo.caption">Create your first product order using the buttons above.</MudText>
+            </div>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private List<Order> _orders = new();
+    private OrderSummaryDto _summary = new();
+    private OrderFilterDto _filter = new() { Page = 1, PageSize = 25 };
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _summary = await OrderService.GetOrderSummaryAsync();
+            var result = await OrderService.GetOrdersAsync(_filter);
+            _orders = result.Items;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading orders: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task SetStatusFilter(string? status)
+    {
+        _filter.Status = status;
+        await LoadDataAsync();
+    }
+
+    private static Color GetStatusColor(string status) => status switch
+    {
+        "Pending" => Color.Warning,
+        "Processing" => Color.Info,
+        "Shipped" => Color.Secondary,
+        "Delivered" => Color.Success,
+        "Cancelled" => Color.Error,
+        _ => Color.Default
+    };
+
+    private async Task OpenNewOrderDialog()
+    {
+        var parameters = new DialogParameters<OrderFormDialog>
+        {
+            { x => x.Order, new Order { Id = Guid.CreateVersion7(), OrderDateUtc = DateTime.UtcNow } }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<OrderFormDialog>("New Product Order", parameters, options);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task OpenEditOrderDialog(Order order)
+    {
+        var parameters = new DialogParameters<OrderFormDialog>
+        {
+            { x => x.Order, order }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<OrderFormDialog>($"Edit Order #{order.OrderNumber}", parameters, options);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task OpenQuickOrderDialog()
+    {
+        var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<QuickOrderDialog>("Quick Counter Order", options);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task OpenInvoicePrintDialog(Order order)
+    {
+        var parameters = new DialogParameters<OrderInvoicePrintView>
+        {
+            { x => x.Order, order }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        await DialogService.ShowAsync<OrderInvoicePrintView>($"Commercial Invoice #{order.OrderNumber}", parameters, options);
+    }
+
+    private async Task UpdateOrderStatus(Order order, string status)
+    {
+        var success = await OrderService.UpdateOrderStatusAsync(order.Id, status);
+        if (success)
+        {
+            Snackbar.Add($"Order #{order.OrderNumber} marked as {status}.", Severity.Success);
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task DeleteOrderAsync(Order order)
+    {
+        bool? confirm = await DialogService.ShowMessageBoxAsync(
+            "Confirm Order Deletion",
+            $"Are you sure you want to delete order #{order.OrderNumber} for {order.CustomerName}?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            await OrderService.DeleteOrderAsync(order.Id);
+            Snackbar.Add($"Order #{order.OrderNumber} deleted.", Severity.Info);
+            await LoadDataAsync();
+        }
+    }
+}

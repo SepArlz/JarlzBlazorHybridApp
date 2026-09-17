@@ -9,6 +9,7 @@
 @inject ILocalStorageService localStorage
 @inject IJSRuntime JS
 @inject NavigationManager NavManager
+@inject IDialogService DialogService
 
 <AntiforgeryToken />
 
@@ -92,7 +93,7 @@
                     </ActivatorContent>
                     <ChildContent>
                         <MudListItem T="string" Text="My Account" Icon="@Icons.Material.Outlined.Person" Href="/account/changepassword" />
-                        <MudListItem T="string" Text="Settings" Icon="@Icons.Material.Filled.Settings" />
+                        <MudListItem T="string" Text="About App" Icon="@Icons.Material.Filled.Info" OnClick="OpenAboutAppDialog" />
                         <MudListItem T="string" Text="Logout" Icon="@Icons.Material.Filled.Logout" OnClick='() => NavManager.NavigateToAfterAuth("/account/logout", Caps.RequiresFullReloadAfterAuth)' />
                         <MudDivider />
                     </ChildContent>
@@ -115,7 +116,7 @@
                     </ActivatorContent>
                     <ChildContent>
                         <MudListItem T="string" Text="My Account" Icon="@Icons.Material.Outlined.Person" Href="/account/changepassword" />
-                        <MudListItem T="string" Text="Settings" Icon="@Icons.Material.Filled.Settings" />
+                        <MudListItem T="string" Text="About App" Icon="@Icons.Material.Filled.Info" OnClick="OpenAboutAppDialog" />
                         <MudListItem T="string" Text="Logout" Icon="@Icons.Material.Filled.Logout" OnClick='() => NavManager.NavigateToAfterAuth("/account/logout", Caps.RequiresFullReloadAfterAuth)' />
                         <MudDivider />
                     </ChildContent>
@@ -236,5 +237,11 @@
     void OnFabClick()
     {
         // TODO: your action here
+    }
+
+    private async Task OpenAboutAppDialog()
+    {
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+        await DialogService.ShowAsync<AboutAppDialog>("About Application", options);
     }
 }

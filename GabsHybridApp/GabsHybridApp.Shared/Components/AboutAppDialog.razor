@@ -1,0 +1,222 @@
+@using GabsHybridApp.Shared.Services
+@inject IFormFactor FormFactor
+@inject IDeviceIdProvider DeviceIdProvider
+@inject IAppUpdateService UpdateService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<MudDialog ContentClass="d-flex flex-column justify-center">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" OnClick="Close" Edge="Edge.Start" Class="d-inline-flex d-sm-none mr-1" aria-label="back" />
+            <img src="_content/GabsHybridApp.Shared/applogo.svg" width="24" height="24" alt="App Logo" class="d-none d-sm-inline-flex" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">About Application</MudText>
+        </div>
+    </TitleContent>
+
+    <DialogContent>
+        <div class="my-auto mud-width-full">
+            <div class="d-flex flex-column align-center text-center my-2">
+                <img src="_content/GabsHybridApp.Shared/applogo.svg" width="64" height="64" alt="App Logo" class="mb-3" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));" />
+
+                <MudText Typo="Typo.h6" Class="font-weight-bold">Gabs Blazor Hybrid Enterprise</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">Enterprise Cross-Platform Architecture • .NET 10</MudText>
+
+                @* Version & Commit Badges *@
+                <div class="d-flex flex-wrap justify-center gap-2 my-1">
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">
+                        @($"v{AppVersionInfo.Version}")
+                    </MudChip>
+
+                    @if (!string.IsNullOrEmpty(AppVersionInfo.ShortGitHash))
+                    {
+                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Custom.Brands.GitHub">
+                            @AppVersionInfo.ShortGitHash
+                        </MudChip>
+                    }
+                </div>
+
+                @* Platform / Environment *@
+                <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Text" Class="mt-1">
+                    @($"{FormFactor.GetFormFactor()} • {FormFactor.GetPlatform()}")
+                </MudChip>
+
+                @* Persistent Device ID (Client Devices Only: Android & Windows) *@
+                @if (!IsWeb)
+                {
+                    <div class="my-2">
+                        <MudPaper Elevation="0" Outlined="true" Class="d-inline-flex align-center justify-center gap-1 px-3 py-1 rounded-pill">
+                            <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" Color="Color.Secondary" />
+                            <MudText Typo="Typo.caption" Class="font-weight-bold mud-text-secondary">DEVICE ID:</MudText>
+                            <MudText Typo="Typo.caption" Class="font-weight-bold" Style="font-family: monospace;">@_deviceId</MudText>
+                            <MudTooltip Text="Copy Device ID">
+                                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                               Size="Size.Small"
+                                               Color="Color.Default"
+                                               Class="pa-1 ml-1"
+                                               OnClick="CopyDeviceId" />
+                            </MudTooltip>
+                        </MudPaper>
+                    </div>
+                }
+
+                @* Check for Updates Action (Client Devices Only: Android & Windows) *@
+                @if (!IsWeb && UpdateService.IsSupported)
+                {
+                    <div class="mt-1 mb-1">
+                        <MudButton StartIcon="@Icons.Material.Filled.SystemUpdate"
+                                   Size="Size.Small"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Disabled="@_isCheckingUpdate"
+                                   OnClick="CheckForUpdatesAsync">
+                            @if (_isCheckingUpdate)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>Checking for Updates...</span>
+                            }
+                            else
+                            {
+                                <span>Check for Updates</span>
+                            }
+                        </MudButton>
+                    </div>
+                }
+            </div>
+
+            <MudDivider Class="my-3" />
+
+            @* Architecture & Attribution Callout Card *@
+            <MudPaper Elevation="0" Outlined="true" Class="pa-3 my-2 rounded">
+                <div class="d-flex align-start gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Layers" Size="Size.Small" Color="Color.Secondary" Class="mt-1" />
+                    <div>
+                        <MudText Typo="Typo.caption" Class="font-weight-bold mud-text-secondary">ARCHITECTURE &amp; TEMPLATE</MudText>
+                        <MudText Typo="Typo.body2" Class="mt-1 app-meta-descriptor">
+                            Enterprise-grade cross-platform Blazor template built with ASP.NET Core 10, .NET MAUI 10, EF Core SQLite/SQL Server, SignalR state broadcast, and MudBlazor 9 Dark Hero UI.
+                        </MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </div>
+    </DialogContent>
+
+    @* Footer *@
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Outlined.ContentCopy"
+                   Size="Size.Small"
+                   Variant="Variant.Text"
+                   Color="Color.Default"
+                   OnClick="CopyDiagnostics">
+            Copy Info
+        </MudButton>
+
+        <MudSpacer />
+
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   Size="Size.Small"
+                   OnClick="Close">
+            Close
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private string _deviceId = "";
+    private bool _isCheckingUpdate = false;
+    private bool IsWeb => string.Equals(FormFactor.GetFormFactor(), "Web", StringComparison.OrdinalIgnoreCase);
+
+    protected override void OnInitialized()
+    {
+        if (!IsWeb)
+        {
+            _deviceId = DeviceIdProvider.GetDeviceId();
+        }
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        if (!UpdateService.IsSupported)
+        {
+            Snackbar.Add("Web version is automatically up to date.", Severity.Info);
+            return;
+        }
+
+        _isCheckingUpdate = true;
+        try
+        {
+            var updateInfo = await UpdateService.CheckForUpdatesAsync(force: true);
+            if (updateInfo.IsUpdateAvailable)
+            {
+                var dialogParameters = new DialogParameters<AppUpdateDialog>
+                {
+                    { x => x.UpdateInfo, updateInfo }
+                };
+                var dialogOptions = new DialogOptions
+                {
+                    MaxWidth = MaxWidth.Small,
+                    FullWidth = true,
+                    CloseButton = !updateInfo.IsMandatory,
+                    BackdropClick = !updateInfo.IsMandatory,
+                    CloseOnEscapeKey = !updateInfo.IsMandatory
+                };
+                await DialogService.ShowAsync<AppUpdateDialog>("System Update", dialogParameters, dialogOptions);
+            }
+            else if (!string.IsNullOrEmpty(updateInfo.ErrorMessage))
+            {
+                Snackbar.Add($"Unable to check for updates: {updateInfo.ErrorMessage}", Severity.Warning);
+            }
+            else
+            {
+                Snackbar.Add($"You are running the latest version (v{updateInfo.CurrentVersion}).", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Update check failed: {ex.Message}", Severity.Warning);
+        }
+        finally
+        {
+            _isCheckingUpdate = false;
+        }
+    }
+
+
+    private async Task CopyDeviceId()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _deviceId);
+            Snackbar.Add("Device ID copied to clipboard!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to copy: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task CopyDiagnostics()
+    {
+        try
+        {
+            var summary = AppVersionInfo.GetDiagnosticSummary(FormFactor);
+            if (!IsWeb && !string.IsNullOrWhiteSpace(_deviceId))
+            {
+                summary += $"\nDevice ID: {_deviceId}";
+            }
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", summary);
+            Snackbar.Add("System diagnostic info copied to clipboard!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to copy to clipboard: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private void Close() => MudDialog?.Close(DialogResult.Ok(true));
+}

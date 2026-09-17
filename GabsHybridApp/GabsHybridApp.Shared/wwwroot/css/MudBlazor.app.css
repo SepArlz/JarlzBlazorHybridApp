@@ -1,0 +1,691 @@
+.mud-layout {
+    overflow-x: clip; /* better than hidden for perf; falls back nicely */
+}
+
+/* Fix horizontal scrollbar bug in MudBlazor FullScreen Dialogs & Drawers */
+.mud-dialog-fullscreen,
+.mud-dialog-container,
+.mud-dialog-container-fullscreen {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+}
+
+.mud-dialog-content {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mud-dialog {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.mud-dialog-fullscreen .mud-grid {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+}
+
+.mud-drawer-temporary {
+    max-width: 100vw !important;
+}
+
+/* Universal Responsive FullScreen Dialogs on Small Screens (<= 600px) */
+@media (max-width: 600px) {
+    .mud-dialog-container:has(.mud-dialog:not(.mud-dialog-message-box):not(.mud-message-box):not(.compact-dialog):not([class*="message-box"])) {
+        padding: 0 !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+    }
+
+    .mud-dialog:not(.mud-dialog-message-box):not(.mud-message-box):not(.compact-dialog):not([class*="message-box"]):not(:has(.mud-message-box)) {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        min-height: 100dvh !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    /* Elegant, clean minimal padding across all dialog contents on small screens */
+    .mud-dialog:not(.mud-dialog-message-box):not(.mud-message-box):not(.compact-dialog):not([class*="message-box"]):not(:has(.mud-message-box)) .mud-dialog-content {
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+        max-height: calc(100dvh - 56px) !important;
+        padding: 10px 12px !important;
+    }
+
+    /* Exception: MudMessageBox and built-in non-custom dialogs stay compact & centered */
+    .mud-dialog-container:has(.mud-message-box),
+    .mud-dialog-container:has(.mud-dialog-message-box),
+    .mud-dialog-container:has([class*="message-box"]),
+    .mud-dialog-container:has(.compact-dialog) {
+        padding: 16px !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .mud-dialog.mud-message-box,
+    .mud-dialog.mud-dialog-message-box,
+    .mud-dialog[class*="message-box"],
+    .mud-dialog:has(.mud-message-box),
+    .mud-dialog.compact-dialog {
+        width: auto !important;
+        max-width: calc(100vw - 32px) !important;
+        min-width: 280px !important;
+        height: auto !important;
+        min-height: unset !important;
+        max-height: calc(100dvh - 64px) !important;
+        border-radius: var(--mud-default-borderradius) !important;
+        margin: auto !important;
+        box-shadow: var(--mud-elevation-24) !important;
+    }
+
+    .mud-dialog.mud-message-box .mud-dialog-content,
+    .mud-dialog.mud-dialog-message-box .mud-dialog-content,
+    .mud-dialog[class*="message-box"] .mud-dialog-content,
+    .mud-dialog:has(.mud-message-box) .mud-dialog-content,
+    .mud-dialog.compact-dialog .mud-dialog-content {
+        flex: 0 1 auto !important;
+        padding: 16px 20px !important;
+        max-height: calc(80dvh - 100px) !important;
+    }
+
+    .mud-dialog.mud-message-box .mud-dialog-actions,
+    .mud-dialog.mud-dialog-message-box .mud-dialog-actions,
+    .mud-dialog[class*="message-box"] .mud-dialog-actions,
+    .mud-dialog:has(.mud-message-box) .mud-dialog-actions,
+    .mud-dialog.compact-dialog .mud-dialog-actions {
+        padding: 12px 16px !important;
+        justify-content: flex-end !important;
+    }
+
+    .mud-dialog.mud-message-box .mud-dialog-title,
+    .mud-dialog.mud-dialog-message-box .mud-dialog-title,
+    .mud-dialog[class*="message-box"] .mud-dialog-title,
+    .mud-dialog:has(.mud-message-box) .mud-dialog-title,
+    .mud-dialog.compact-dialog .mud-dialog-title {
+        padding: 16px 20px 8px 20px !important;
+    }
+
+    /* Small Screen: Minimal & Clean Margin & Padding for Expansion Panels */
+    .mud-dialog:not(.mud-message-box):not(:has(.mud-message-box)) .mud-expansion-panels {
+        padding: 0 !important;
+    }
+
+    .mud-dialog:not(.mud-message-box):not(:has(.mud-message-box)) .mud-expansion-panel {
+        margin: 0 0 2px 0 !important;
+        border-radius: 4px !important;
+        box-shadow: none !important;
+        border: 1px solid var(--mud-palette-lines-default) !important;
+    }
+
+    .mud-dialog:not(.mud-message-box):not(:has(.mud-message-box)) .mud-expand-panel-header {
+        padding: 10px 12px !important;
+        min-height: 48px !important;
+    }
+
+    .mud-dialog:not(.mud-message-box):not(:has(.mud-message-box)) .mud-expansion-panel-content {
+        padding: 10px 8px !important;
+    }
+
+    .mud-dialog:not(.mud-message-box):not(:has(.mud-message-box)) .mud-dialog-actions {
+        padding: 8px 12px !important;
+    }
+}
+
+/* ==========================================================================
+   MudTable Small Screen Responsive Card Layout (Strict 2-Column Grid)
+   Column 1 (Left): Label pinned to the left edge, starting at pixel 0.
+   Column 2 (Right): Value pinned to the right edge, strictly right-aligned.
+   ========================================================================== */
+@media (max-width: 959.98px) {
+    /* Transform each table row into an elevated, soft-cornered Card with clear spacing */
+    .mud-table-container tbody .mud-table-row {
+        display: block !important;
+        margin: 12px 4px 14px 4px !important;
+        border-radius: 12px !important;
+        background: var(--mud-palette-surface) !important;
+        border: 1px solid var(--mud-palette-lines-default) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+        overflow: hidden !important;
+    }
+
+    .dark-theme .mud-table-container tbody .mud-table-row,
+    .mud-theme-dark .mud-table-container tbody .mud-table-row {
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+    }
+
+    /* Clean padding and inset dividers inside each card */
+    .mud-table-container tbody .mud-table-row > .mud-table-cell {
+        position: relative !important;
+        padding: 8px 12px !important;
+    }
+
+    .mud-table-container tbody .mud-table-row > .mud-table-cell:first-child {
+        padding-top: 12px !important;
+    }
+
+    .mud-table-container tbody .mud-table-row > .mud-table-cell:last-child {
+        padding-bottom: 10px !important;
+    }
+
+    /* Inset hairline divider: Starts where label text starts, ends where value text ends */
+    .mud-table-container tbody .mud-table-row > .mud-table-cell:not(:last-child)::after {
+        content: "" !important;
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 12px !important;
+        right: 12px !important;
+        height: 1px !important;
+        background: var(--mud-palette-lines-default) !important;
+        opacity: 0.45 !important;
+        pointer-events: none !important;
+    }
+
+    /* Force every cell into a single row: Label on left, Value on right (NEVER wrap entire value to line 2) */
+    .mud-table-cell[data-label] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        text-align: right !important;
+        column-gap: 8px !important;
+    }
+
+    /* LABEL: Pinned to the FAR LEFT edge */
+    .mud-table-cell[data-label]::before {
+        content: attr(data-label) !important;
+        display: block !important;
+        text-align: left !important;
+        font-weight: 600 !important;
+        color: var(--mud-palette-text-primary) !important;
+        flex: 0 0 auto !important;
+        margin-right: auto !important; /* Pushes ALL values to the right edge */
+        margin-left: 0 !important;
+        padding-right: 12px !important;
+        white-space: normal !important;
+        align-self: flex-start !important;
+    }
+
+    /* Remove stray <br> tags in mobile card mode so they don't break flex alignment */
+    .mud-table-cell[data-label] > br {
+        display: none !important;
+    }
+
+    /* Text elements inside values */
+    .mud-table-cell[data-label] div,
+    .mud-table-cell[data-label] span,
+    .mud-table-cell[data-label] small,
+    .mud-table-cell[data-label] b,
+    .mud-table-cell[data-label] p {
+        text-align: right !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        hyphens: none !important;
+        -webkit-hyphens: none !important;
+    }
+
+    /* Override any desktop inline max-width/min-width constraints on the cell and inner containers */
+    .mud-table-cell[data-label] {
+        max-width: none !important;
+        min-width: unset !important;
+    }
+
+    /* Long string values wrap cleanly with max-width, pinned to the right */
+    .mud-table-cell[data-label] > div,
+    .mud-table-cell[data-label] > span,
+    .mud-table-cell[data-label] > small,
+    .mud-table-cell[data-label] > a {
+        max-width: 65% !important;
+        text-align: right !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        hyphens: none !important;
+        -webkit-hyphens: none !important;
+        white-space: normal !important;
+    }
+
+    /* Long identifiers/filenames (e.g. backup .zip archives) truncate with ellipsis on small screens */
+    .mud-table-cell[data-label] .backup-filename-text,
+    .mud-table-cell[data-label] .table-cell-truncate,
+    .mud-table-cell[data-label] .mud-text-truncate {
+        display: block !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        text-align: right !important;
+    }
+
+    .mud-table-cell[data-label] > div.d-flex.flex-column {
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Ensure multiple value items (e.g. Incident# + Call, Date + Time, Barangay + Purok) cluster tightly at the right edge */
+    .mud-table-cell[data-label] > *:not(::before) {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* Only the FIRST element after the label pushes the entire value cluster to the far right */
+    .mud-table-cell[data-label] > *:not(::before):first-of-type {
+        margin-left: auto !important;
+    }
+
+    /* Tight inline spacing between items in the value cluster */
+    .mud-table-cell[data-label] > *:not(::before) + *:not(::before) {
+        margin-left: 4px !important;
+    }
+
+    /* Flex containers inside values (e.g. badges, chips, icons) */
+    .mud-table-cell[data-label] .d-flex,
+    .mud-table-cell[data-label] .mud-stack {
+        justify-content: flex-end !important;
+        align-items: center !important;
+        text-align: right !important;
+    }
+
+    /* Action buttons: cluster snugly at the far right */
+    .mud-table-cell[data-label*="Action" i] {
+        justify-content: flex-end !important;
+    }
+
+    .mud-table-cell[data-label*="Action" i] .mud-icon-button,
+    .mud-table-cell[data-label*="Action" i] .mud-button-root {
+        margin: 0 !important;
+    }
+
+    /* Small Screen: MudTable Pager Full-Width Stacked Layout */
+    .mud-table-pagination {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        padding: 12px 8px !important;
+        gap: 8px !important;
+    }
+
+    .mud-table-pagination-toolbar {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        padding: 0 !important;
+        min-height: unset !important;
+        gap: 8px !important;
+    }
+
+    /* Block 1 (Top): "Rows per page: 10   1-10 of 818" centered full width */
+    .mud-table-pagination-information,
+    .mud-table-pagination-select {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        text-align: center !important;
+    }
+
+    .mud-table-pagination-toolbar > .mud-table-pagination-actions {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 4px 0 0 0 !important;
+        gap: 16px !important;
+    }
+
+    /* Block 2 (Bottom): Previous / Next buttons centered full width */
+    .mud-table-pagination-actions {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+}
+
+@media (min-width: 601px) {
+    .mud-dialog:not(.mud-dialog-fullscreen) {
+        max-height: 90vh !important;
+    }
+
+    .mud-dialog:not(.mud-dialog-fullscreen) .mud-dialog-content {
+        max-height: calc(90vh - 64px) !important;
+    }
+
+    .mud-dialog.ai-export-dialog {
+        max-width: 680px !important;
+        width: 100% !important;
+        max-height: 90vh !important;
+    }
+
+    .mud-dialog.ai-export-dialog .mud-dialog-content {
+        max-height: 78vh !important;
+        overflow-y: auto !important;
+        padding: 20px !important;
+    }
+}
+
+/* Responsive Action Buttons & Toolbars (Full-Width Block on Small Screens <= 599.98px) */
+@media (max-width: 599.98px) {
+    .btn-block-mobile,
+    .btn-block-mobile.mud-button-root {
+        width: 100% !important;
+    }
+
+    .action-bar-mobile {
+        width: 100% !important;
+    }
+}
+
+/* Quick Log Time Picker End Toggle Adornment */
+.picker-toggle-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.picker-toggle-wrapper .mud-input-root {
+    padding-right: 44px !important;
+}
+
+
+/* ==========================================================================
+   Extra-Small Button & Button Group System (.x-small-button, .x-small-button-group)
+   Provides an ultra-compact, high-density form factor (~24px height)
+   with reduced padding, margins, and snug icon/text alignment.
+   ========================================================================== */
+
+/* Extra-Small Standalone Button */
+.x-small-button,
+.xsmall-button {
+    min-height: 24px !important;
+    height: 24px !important;
+    padding: 1px 7px !important;
+    font-size: 0.75rem !important; /* 12px */
+    line-height: 1.2 !important;
+    font-weight: 500 !important;
+    border-radius: var(--mud-default-borderradius) !important;
+}
+
+.x-small-button.mud-icon-button,
+.xsmall-button.mud-icon-button {
+    min-width: 24px !important;
+    width: 24px !important;
+    min-height: 24px !important;
+    height: 24px !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 2px !important;
+}
+
+.x-small-button .mud-button-label,
+.xsmall-button .mud-button-label {
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+    padding: 0 !important;
+    gap: 3px !important;
+}
+
+.x-small-button .mud-icon-root,
+.x-small-button .mud-svg-icon,
+.xsmall-button .mud-icon-root,
+.xsmall-button .mud-svg-icon {
+    font-size: 1rem !important; /* 16px */
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+.x-small-button .mud-button-icon-start,
+.xsmall-button .mud-button-icon-start {
+    margin-inline-start: -2px !important;
+    margin-inline-end: 3px !important;
+}
+
+.x-small-button .mud-button-icon-end,
+.xsmall-button .mud-button-icon-end {
+    margin-inline-start: 3px !important;
+    margin-inline-end: -2px !important;
+}
+
+/* Extra-Small Button Group */
+.x-small-button-group,
+.xsmall-button-group {
+    min-height: 24px !important;
+    height: 24px !important;
+    display: inline-flex !important;
+    vertical-align: middle !important;
+    align-items: stretch !important;
+    border-radius: var(--mud-default-borderradius) !important;
+    overflow: visible !important;
+}
+
+/* Unified shadow across the entire button group (no segmented / cut-off shadows) */
+.x-small-button-group.mud-button-group-filled,
+.xsmall-button-group.mud-button-group-filled {
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 2px 3px 0 rgba(0, 0, 0, 0.14), 0 1px 6px 0 rgba(0, 0, 0, 0.12) !important;
+}
+
+.x-small-button-group.mud-button-group-filled:hover,
+.xsmall-button-group.mud-button-group-filled:hover {
+    box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.22), 0 3px 4px 0 rgba(0, 0, 0, 0.16), 0 1px 8px 0 rgba(0, 0, 0, 0.14) !important;
+}
+
+/* Individual buttons yield their shadows to the group container */
+.x-small-button-group .mud-button-root,
+.xsmall-button-group .mud-button-root {
+    box-shadow: none !important;
+}
+
+/* Any MudButton directly inside the button group */
+.x-small-button-group .mud-button-root,
+.xsmall-button-group .mud-button-root,
+.x-small-button-group .mud-button,
+.xsmall-button-group .mud-button {
+    min-height: 24px !important;
+    height: 24px !important;
+    max-height: 24px !important;
+    padding: 1px 7px !important;
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+    font-weight: 500 !important;
+}
+
+/* Menu activator wrapper inside the button group (e.g. split buttons) */
+.x-small-button-group .mud-menu,
+.xsmall-button-group .mud-menu {
+    display: inline-flex !important;
+    align-items: stretch !important;
+    min-height: 24px !important;
+    height: 24px !important;
+    max-height: 24px !important;
+}
+
+/* Dropdown arrow activator button or icon buttons inside the group */
+.x-small-button-group .mud-icon-button,
+.xsmall-button-group .mud-icon-button,
+.x-small-button-group .mud-menu-icon-button-activator,
+.xsmall-button-group .mud-menu-icon-button-activator {
+    min-height: 24px !important;
+    height: 24px !important;
+    max-height: 24px !important;
+    min-width: 24px !important;
+    width: 24px !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.x-small-button-group .mud-button-label,
+.xsmall-button-group .mud-button-label,
+.x-small-button-group .mud-icon-button-label,
+.xsmall-button-group .mud-icon-button-label {
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+    padding: 0 !important;
+    gap: 3px !important;
+}
+
+.x-small-button-group .mud-button .mud-icon-root,
+.x-small-button-group .mud-button .mud-svg-icon,
+.xsmall-button-group .mud-button .mud-icon-root,
+.xsmall-button-group .mud-button .mud-svg-icon {
+    font-size: 1rem !important;
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+.x-small-button-group .mud-icon-button .mud-icon-root,
+.x-small-button-group .mud-icon-button .mud-svg-icon,
+.xsmall-button-group .mud-icon-button .mud-icon-root,
+.xsmall-button-group .mud-icon-button .mud-svg-icon {
+    font-size: 1.125rem !important;
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+}
+
+.x-small-button-group .mud-button-icon-start,
+.xsmall-button-group .mud-button-icon-start {
+    margin-inline-start: -2px !important;
+    margin-inline-end: 3px !important;
+}
+
+.x-small-button-group .mud-button-icon-end,
+.xsmall-button-group .mud-button-icon-end {
+    margin-inline-start: 3px !important;
+    margin-inline-end: -2px !important;
+}
+
+/* Left side: first button has rounded left corners and square right corners */
+.x-small-button-group.mud-button-group-horizontal > .mud-button-root:first-child,
+.xsmall-button-group.mud-button-group-horizontal > .mud-button-root:first-child,
+.x-small-button-group.mud-button-group-horizontal > *:first-child .mud-button-root,
+.xsmall-button-group.mud-button-group-horizontal > *:first-child .mud-button-root {
+    border-top-left-radius: var(--mud-default-borderradius) !important;
+    border-bottom-left-radius: var(--mud-default-borderradius) !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+/* Right side: last item (menu wrapper and its activator button) preserves soft right-hand rounded corners */
+.x-small-button-group.mud-button-group-horizontal > .mud-menu:last-child,
+.xsmall-button-group.mud-button-group-horizontal > .mud-menu:last-child,
+.x-small-button-group.mud-button-group-horizontal > .mud-menu:last-child .mud-button-root,
+.xsmall-button-group.mud-button-group-horizontal > .mud-menu:last-child .mud-button-root,
+.x-small-button-group.mud-button-group-horizontal > .mud-button-root:last-child,
+.xsmall-button-group.mud-button-group-horizontal > .mud-button-root:last-child {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-top-right-radius: var(--mud-default-borderradius) !important;
+    border-bottom-right-radius: var(--mud-default-borderradius) !important;
+}
+
+/* Crisp divider between split button action and menu dropdown activator */
+.x-small-button-group.mud-button-group-filled > .mud-menu:not(:first-child) > .mud-button-root,
+.xsmall-button-group.mud-button-group-filled > .mud-menu:not(:first-child) > .mud-button-root {
+    border-left: 1px solid rgba(255, 255, 255, 0.28) !important;
+}
+
+.x-small-button-group.mud-button-group-outlined > .mud-menu:not(:first-child) > .mud-button-root,
+.xsmall-button-group.mud-button-group-outlined > .mud-menu:not(:first-child) > .mud-button-root {
+    border-left: 1px solid currentColor !important;
+}
+
+/* ==========================================================================
+   Universal MudTable Action Button Standard
+   Ensures all buttons and button groups inside table action cells
+   automatically conform to the 24px extra-small design standard.
+   ========================================================================== */
+.mud-table-cell[data-label*="Action" i] .mud-button-group-root,
+.mud-table-cell .mud-button-group-root.x-small-button-group {
+    min-height: 24px !important;
+    height: 24px !important;
+}
+
+.mud-table-cell[data-label*="Action" i] .mud-icon-button,
+.mud-table-cell .x-small-button.mud-icon-button {
+    min-width: 24px !important;
+    width: 24px !important;
+    min-height: 24px !important;
+    height: 24px !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 2px !important;
+}
+
+.mud-table-cell[data-label*="Action" i] .mud-icon-button .mud-icon-root,
+.mud-table-cell[data-label*="Action" i] .mud-icon-button .mud-svg-icon {
+    font-size: 1.125rem !important;
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+}
+
+/* ==========================================================================
+   Desktop-Only Subtle Actions with Graduated Hover Focus
+   Applies across all MudTables on web & desktop.
+   Remains permanently visible on mobile (<= 959.98px).
+   ========================================================================== */
+@media (min-width: 960px) {
+    /* Subtle resting state on desktop table rows: keeps action affordance without visual clutter */
+    .mud-table-row td[data-label="Actions"] > *,
+    .mud-table-row td[data-label="actions"] > *,
+    .mud-table-row td[data-label="Action"] > *,
+    .mud-table-row td[data-label="action"] > *,
+    .mud-table-row td[data-label="Quick Actions"] > *,
+    .mud-table-row td[data-label="quick actions"] > *,
+    .mud-table-row td[data-label*="Action" i] > * {
+        opacity: 0.25 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transition: opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1), transform 0.18s ease;
+    }
+
+    /* Elevate action visibility when hovering the row or navigating via keyboard */
+    .mud-table-row:hover td[data-label="Actions"] > *,
+    .mud-table-row:hover td[data-label="actions"] > *,
+    .mud-table-row:hover td[data-label="Action"] > *,
+    .mud-table-row:hover td[data-label="action"] > *,
+    .mud-table-row:hover td[data-label="Quick Actions"] > *,
+    .mud-table-row:hover td[data-label="quick actions"] > *,
+    .mud-table-row:hover td[data-label*="Action" i] > *,
+    .mud-table-row:focus-within td[data-label="Actions"] > *,
+    .mud-table-row:focus-within td[data-label="actions"] > *,
+    .mud-table-row:focus-within td[data-label="Action"] > *,
+    .mud-table-row:focus-within td[data-label="action"] > *,
+    .mud-table-row:focus-within td[data-label="Quick Actions"] > *,
+    .mud-table-row:focus-within td[data-label="quick actions"] > *,
+    .mud-table-row:focus-within td[data-label*="Action" i] > * {
+        opacity: 0.75 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    /* Full prominence when directly hovering or focusing the specific action element */
+    .mud-table-row td[data-label="Actions"] > *:hover,
+    .mud-table-row td[data-label="actions"] > *:hover,
+    .mud-table-row td[data-label="Action"] > *:hover,
+    .mud-table-row td[data-label="action"] > *:hover,
+    .mud-table-row td[data-label="Quick Actions"] > *:hover,
+    .mud-table-row td[data-label="quick actions"] > *:hover,
+    .mud-table-row td[data-label*="Action" i] > *:hover,
+    .mud-table-row td[data-label="Actions"] > *:focus-visible,
+    .mud-table-row td[data-label="actions"] > *:focus-visible,
+    .mud-table-row td[data-label="Action"] > *:focus-visible,
+    .mud-table-row td[data-label="action"] > *:focus-visible,
+    .mud-table-row td[data-label="Quick Actions"] > *:focus-visible,
+    .mud-table-row td[data-label="quick actions"] > *:focus-visible,
+    .mud-table-row td[data-label*="Action" i] > *:focus-visible {
+        opacity: 1 !important;
+    }
+}
+

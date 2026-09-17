@@ -1,0 +1,270 @@
+@using GabsHybridApp.Shared.Models
+@using GabsHybridApp.Shared.Services
+@using GabsHybridApp.Shared.Data
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@inject IOrderService OrderService
+@inject IDbContextFactory<HybridAppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudAppBar Color="Color.Primary" Elevation="0" Dense="true" Class="px-3">
+            <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="mr-2" />
+            <MudText Typo="Typo.h6">@((Order.Id == Guid.Empty || string.IsNullOrWhiteSpace(Order.OrderNumber)) ? "New Product Order" : $"Edit Order #{Order.OrderNumber}")</MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="Cancel" Size="Size.Small" />
+        </MudAppBar>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_formIsValid" Class="mt-2">
+            <MudGrid>
+                <!-- Customer Details -->
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="font-weight-bold mb-1">Customer & Destination</MudText>
+                    <MudDivider Class="mb-3" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="Order.CustomerName" Label="Customer Full Name" Required="true" RequiredError="Customer name is required" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="Order.CustomerPhone" Label="Contact Phone" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="Order.CustomerEmail" Label="Email Address" InputType="InputType.Email" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect @bind-Value="Order.Status" Label="Order Status" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                        <MudSelectItem Value="@("Processing")">Processing</MudSelectItem>
+                        <MudSelectItem Value="@("Shipped")">Shipped</MudSelectItem>
+                        <MudSelectItem Value="@("Delivered")">Delivered</MudSelectItem>
+                        <MudSelectItem Value="@("Cancelled")">Cancelled</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect @bind-Value="Order.PaymentMethod" Label="Payment Method" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        <MudSelectItem Value="@("CashOnDelivery")">Cash on Delivery (COD)</MudSelectItem>
+                        <MudSelectItem Value="@("CreditCard")">Credit / Debit Card</MudSelectItem>
+                        <MudSelectItem Value="@("GCash")">GCash / E-Wallet</MudSelectItem>
+                        <MudSelectItem Value="@("BankTransfer")">Bank Transfer</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect @bind-Value="Order.PaymentStatus" Label="Payment Status" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                        <MudSelectItem Value="@("Paid")">Paid</MudSelectItem>
+                        <MudSelectItem Value="@("Refunded")">Refunded</MudSelectItem>
+                        <MudSelectItem Value="@("Failed")">Failed</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Order.ShippingAddress" Label="Shipping Address" Lines="2" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+
+                <!-- Order Line Items -->
+                <MudItem xs="12" Class="mt-3">
+                    <div class="d-flex justify-space-between align-center mb-1">
+                        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="font-weight-bold">Order Items</MudText>
+                        <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" OnClick="AddItemRow">
+                            Add Line Item
+                        </MudButton>
+                    </div>
+                    <MudDivider Class="mb-3" />
+                </MudItem>
+
+                @if (Order.Items.Count == 0)
+                {
+                    <MudItem xs="12">
+                        <MudAlert Severity="Severity.Warning" Dense="true" Class="my-2">
+                            Please add at least one product item to this order.
+                        </MudAlert>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12">
+                        <MudTable Items="Order.Items" Dense="true" Hover="true" Elevation="0" Outlined="true">
+                            <HeaderContent>
+                                <MudTh>Product</MudTh>
+                                <MudTh Style="width: 120px;">Unit Price</MudTh>
+                                <MudTh Style="width: 90px;">Qty</MudTh>
+                                <MudTh Style="width: 100px;">Discount</MudTh>
+                                <MudTh Style="width: 120px;" Class="text-right">Line Total</MudTh>
+                                <MudTh Style="width: 50px;"></MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Product">
+                                    <MudSelect T="int?" Value="@context.ProductId" ValueChanged="@(id => OnProductSelected(context, id))" Dense="true" Margin="Margin.Dense" Variant="Variant.Text">
+                                        @foreach (var p in _availableProducts)
+                                        {
+                                            <MudSelectItem T="int?" Value="@p.Id">@p.Name (@p.UnitPrice.ToString("C"))</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudTd>
+                                <MudTd DataLabel="Unit Price">
+                                    <MudNumericField T="decimal" Value="@context.UnitPrice" ValueChanged="@(v => { context.UnitPrice = v; Recalculate(); })" Format="N2" Margin="Margin.Dense" Variant="Variant.Text" />
+                                </MudTd>
+                                <MudTd DataLabel="Qty">
+                                    <MudNumericField T="int" Value="@context.Quantity" ValueChanged="@(v => { context.Quantity = v; Recalculate(); })" Min="1" Margin="Margin.Dense" Variant="Variant.Text" />
+                                </MudTd>
+                                <MudTd DataLabel="Discount">
+                                    <MudNumericField T="decimal" Value="@context.Discount" ValueChanged="@(v => { context.Discount = v; Recalculate(); })" Min="0" Format="N2" Margin="Margin.Dense" Variant="Variant.Text" />
+                                </MudTd>
+                                <MudTd DataLabel="Line Total" Class="text-right">
+                                    <MudText Typo="Typo.body2" Class="font-weight-bold">@context.TotalPrice.ToString("C")</MudText>
+                                </MudTd>
+                                <MudTd Class="text-center">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveItemRow(context))" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudItem>
+                }
+
+                <!-- Financial Calculation Summary -->
+                <MudItem xs="12" sm="6" Class="mt-3">
+                    <MudTextField @bind-Value="Order.Notes" Label="Order Notes / Memo" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6" Class="mt-3">
+                    <MudPaper Outlined="true" Class="pa-3 rounded">
+                        <div class="d-flex justify-space-between mb-1">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Sub-Total:</MudText>
+                            <MudText Typo="Typo.body2">@Order.SubTotal.ToString("C")</MudText>
+                        </div>
+                        <div class="d-flex justify-space-between align-center mb-1">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Order Discount:</MudText>
+                            <MudNumericField T="decimal" Value="@Order.DiscountAmount" ValueChanged="@(v => { Order.DiscountAmount = v; Recalculate(); })" Format="N2" Min="0" Margin="Margin.Dense" Variant="Variant.Text" Style="max-width: 110px; text-align: right;" />
+                        </div>
+                        <div class="d-flex justify-space-between align-center mb-1">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Shipping Fee:</MudText>
+                            <MudNumericField T="decimal" Value="@Order.ShippingFee" ValueChanged="@(v => { Order.ShippingFee = v; Recalculate(); })" Format="N2" Min="0" Margin="Margin.Dense" Variant="Variant.Text" Style="max-width: 110px; text-align: right;" />
+                        </div>
+                        <MudDivider Class="my-2" />
+                        <div class="d-flex justify-space-between align-center">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Grand Total:</MudText>
+                            <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold">@Order.TotalAmount.ToString("C")</MudText>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Outlined">Cancel</MudButton>
+        <MudButton OnClick="SaveOrder" Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!_formIsValid || Order.Items.Count == 0 || _isSaving)">
+            @(_isSaving ? "Saving..." : "Save Order")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public Order Order { get; set; } = new();
+
+    private MudForm? _form;
+    private bool _formIsValid;
+    private bool _isSaving;
+    private List<Product> _availableProducts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _availableProducts = await db.Products.AsNoTracking().OrderBy(p => p.Name).ToListAsync();
+
+        if (Order.Items.Count == 0 && _availableProducts.Count > 0)
+        {
+            AddItemRow();
+        }
+        else
+        {
+            Recalculate();
+        }
+    }
+
+    private void AddItemRow()
+    {
+        var first = _availableProducts.FirstOrDefault();
+        Order.Items.Add(new OrderItem
+        {
+            Id = Guid.CreateVersion7(),
+            ProductId = first?.Id,
+            ProductName = first?.Name ?? "Custom Item",
+            ProductUnit = first?.Unit ?? "unit",
+            UnitPrice = first?.UnitPrice ?? 0m,
+            Quantity = 1,
+            Discount = 0m,
+            TotalPrice = first?.UnitPrice ?? 0m
+        });
+        Recalculate();
+    }
+
+    private void RemoveItemRow(OrderItem item)
+    {
+        Order.Items.Remove(item);
+        Recalculate();
+    }
+
+    private void OnProductSelected(OrderItem item, int? productId)
+    {
+        item.ProductId = productId;
+        var p = _availableProducts.FirstOrDefault(x => x.Id == productId);
+        if (p != null)
+        {
+            item.ProductName = p.Name ?? "Product";
+            item.ProductUnit = p.Unit;
+            item.UnitPrice = p.UnitPrice;
+        }
+        Recalculate();
+    }
+
+    private void Recalculate()
+    {
+        foreach (var item in Order.Items)
+        {
+            item.TotalPrice = Math.Max(0, (item.UnitPrice * item.Quantity) - item.Discount);
+        }
+
+        Order.SubTotal = Order.Items.Sum(i => i.TotalPrice);
+        Order.TotalAmount = Math.Max(0, Order.SubTotal - Order.DiscountAmount + Order.TaxAmount + Order.ShippingFee);
+    }
+
+    private async Task SaveOrder()
+    {
+        if (_form != null)
+        {
+            await _form.ValidateAsync();
+            if (!_formIsValid || Order.Items.Count == 0) return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            Recalculate();
+
+            if (Order.Id == Guid.Empty)
+            {
+                await OrderService.CreateOrderAsync(Order);
+                Snackbar.Add($"Order #{Order.OrderNumber} created successfully!", Severity.Success);
+            }
+            else
+            {
+                await OrderService.UpdateOrderAsync(Order);
+                Snackbar.Add($"Order #{Order.OrderNumber} updated successfully!", Severity.Success);
+            }
+
+            MudDialog.Close(DialogResult.Ok(Order));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to save order: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -2,39 +2,96 @@
     <MudThemeProvider @bind-IsDarkMode="@IsDarkMode" Theme="MyTheme"></MudThemeProvider>
 </CascadingValue>
 
+@if (IsDarkMode)
+{
+    <style>
+        /* ==========================================================================
+           🌙 Dark Mode Dialog AppBar Gradients
+           Injected dynamically whenever Dark Mode is active.
+           Targeting ONLY MudAppBar inside MudDialog (.mud-dialog .mud-appbar)
+           ========================================================================== */
+
+        /* 🚨 Error Dialog AppBars */
+        .mud-dialog .mud-appbar.mud-theme-error,
+        .mud-dialog .mud-appbar.mud-appbar-error,
+        .mud-dialog .mud-appbar[class*="error"],
+        .mud-dialog-title .mud-appbar.mud-theme-error,
+        .mud-dialog-title .mud-appbar[class*="error"] {
+            background: linear-gradient(135deg, #881337 0%, #be123c 45%, #e11d48 100%) !important;
+            border-bottom: 1px solid rgba(251, 113, 133, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(225, 29, 72, 0.3) !important;
+        }
+
+        /* 🔷 Primary Dialog AppBars */
+        .mud-dialog .mud-appbar.mud-theme-primary,
+        .mud-dialog .mud-appbar.mud-appbar-primary,
+        .mud-dialog .mud-appbar[class*="primary"],
+        .mud-dialog-title .mud-appbar.mud-theme-primary,
+        .mud-dialog-title .mud-appbar[class*="primary"] {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #3b82f6 100%) !important;
+            border-bottom: 1px solid rgba(96, 165, 250, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3) !important;
+        }
+
+        /* 💜 Secondary Dialog AppBars */
+        .mud-dialog .mud-appbar.mud-theme-secondary,
+        .mud-dialog .mud-appbar.mud-appbar-secondary,
+        .mud-dialog .mud-appbar[class*="secondary"],
+        .mud-dialog-title .mud-appbar.mud-theme-secondary,
+        .mud-dialog-title .mud-appbar[class*="secondary"] {
+            background: linear-gradient(135deg, #312e81 0%, #4338ca 50%, #6366f1 100%) !important;
+            border-bottom: 1px solid rgba(165, 180, 252, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3) !important;
+        }
+
+        /* ℹ️ Info Dialog AppBars */
+        .mud-dialog .mud-appbar.mud-theme-info,
+        .mud-dialog .mud-appbar.mud-appbar-info,
+        .mud-dialog .mud-appbar[class*="info"],
+        .mud-dialog-title .mud-appbar.mud-theme-info,
+        .mud-dialog-title .mud-appbar[class*="info"] {
+            background: linear-gradient(135deg, #0c4a6e 0%, #0284c7 50%, #38bdf8 100%) !important;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(2, 132, 199, 0.3) !important;
+        }
+
+        /* 🌲 Success Dialog AppBars */
+        .mud-dialog .mud-appbar.mud-theme-success,
+        .mud-dialog .mud-appbar.mud-appbar-success,
+        .mud-dialog .mud-appbar[class*="success"],
+        .mud-dialog-title .mud-appbar.mud-theme-success,
+        .mud-dialog-title .mud-appbar[class*="success"] {
+            background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%) !important;
+            border-bottom: 1px solid rgba(52, 211, 153, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(5, 150, 105, 0.3) !important;
+        }
+
+        /* ⚠️ Warning Dialog AppBars */
+        .mud-dialog .mud-appbar.mud-theme-warning,
+        .mud-dialog .mud-appbar.mud-appbar-warning,
+        .mud-dialog .mud-appbar[class*="warning"],
+        .mud-dialog-title .mud-appbar.mud-theme-warning,
+        .mud-dialog-title .mud-appbar[class*="warning"] {
+            background: linear-gradient(135deg, #78350f 0%, #d97706 50%, #f59e0b 100%) !important;
+            border-bottom: 1px solid rgba(251, 191, 36, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3) !important;
+        }
+
+        /* 🌑 Default / Neutral Dialog AppBars */
+        .mud-dialog .mud-appbar:not([class*="primary"]):not([class*="error"]):not([class*="success"]):not([class*="warning"]):not([class*="info"]):not([class*="secondary"]),
+        .mud-dialog-title .mud-appbar:not([class*="primary"]):not([class*="error"]):not([class*="success"]):not([class*="warning"]):not([class*="info"]):not([class*="secondary"]) {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+        }
+    </style>
+}
+
 @code {
     [Parameter] public bool IsDarkMode { get; set; }
 
     public static MudTheme MyTheme => new()
     {
-        // PaletteLight = new PaletteLight()
-        // {
-        //     Primary = Colors.BlueGray.Default,
-        //     Secondary = Colors.DeepPurple.Accent2,
-        //     Background = Colors.Gray.Lighten5,
-        //     AppbarBackground = Colors.BlueGray.Default,
-        //     DrawerBackground = Colors.BlueGray.Lighten1,
-        //     DrawerText = Colors.Shades.White,
-        //     DrawerIcon = Colors.Shades.White,
-        //     Success = Colors.Green.Darken3,
-
-        //     ActionDefault = Colors.BlueGray.Darken1,
-        //     ActionDisabled = Colors.BlueGray.Lighten2,
-        //     ActionDisabledBackground = Colors.BlueGray.Lighten4,
-
-        // },
-        // PaletteDark = new PaletteDark()
-        // {
-        //     Primary = Colors.BlueGray.Darken1,
-        //     Secondary = Colors.DeepPurple.Darken2,
-        //     Success = Colors.Teal.Darken4,
-        //     Error = Colors.Pink.Default,
-
-        //     ActionDefault = Colors.BlueGray.Darken1,
-        //     ActionDisabled = Colors.BlueGray.Lighten2,
-        //     ActionDisabledBackground = Colors.BlueGray.Default,
-        // },
-
         PaletteLight = new PaletteLight
         {
             Primary = Colors.Blue.Accent3,
@@ -62,25 +119,44 @@
 
         PaletteDark = new PaletteDark
         {
-            Primary = Colors.Blue.Accent3,
-            Secondary = Colors.BlueGray.Lighten1,
-            Success = Colors.Green.Lighten1,
-            Info = Colors.Cyan.Lighten2,
-            Warning = Colors.Amber.Lighten1,
-            Error = Colors.Red.Lighten1,
+            Primary = "#3b82f6",
+            PrimaryContrastText = "#ffffff",
+            Secondary = "#818cf8",
+            SecondaryContrastText = "#ffffff",
+            Success = "#10b981",
+            Info = "#38bdf8",
+            Warning = "#f59e0b",
+            Error = "#f43f5e",
+            Dark = "#0f172a",
 
-            Background = Colors.Gray.Darken4,
-            TextPrimary = Colors.Shades.White,
-            TextSecondary = Colors.Gray.Lighten1,
+            Background = "#0b0f17",
+            Surface = "#151c2c",
+            AppbarBackground = "#0f172a",
+            AppbarText = "#f8fafc",
+            DrawerBackground = "#0b0f17",
+            DrawerText = "#e2e8f0",
+            DrawerIcon = "#94a3b8",
 
-            ActionDefault = Colors.Gray.Lighten1,
-            ActionDisabled = Colors.Gray.Darken1,
-            ActionDisabledBackground = Colors.BlueGray.Darken2,
+            TextPrimary = "#f8fafc",
+            TextSecondary = "#94a3b8",
+            TextDisabled = "#475569",
+
+            ActionDefault = "#94a3b8",
+            ActionDisabled = "#475569",
+            ActionDisabledBackground = "rgba(255, 255, 255, 0.05)",
+
+            Divider = "rgba(255, 255, 255, 0.08)",
+            LinesDefault = "rgba(255, 255, 255, 0.12)",
+            LinesInputs = "rgba(255, 255, 255, 0.2)",
+            TableLines = "rgba(255, 255, 255, 0.08)",
+            TableStriped = "rgba(255, 255, 255, 0.02)",
+            TableHover = "rgba(255, 255, 255, 0.04)",
+            OverlayDark = "rgba(11, 15, 23, 0.8)",
         },
 
         LayoutProperties = new LayoutProperties()
         {
-            DefaultBorderRadius = "3px"
+            DefaultBorderRadius = "4px"
         },
         Typography = new Typography()
         {
@@ -94,43 +170,43 @@
             },
             H1 = new H1Typography
             {
-                FontSize = "6rem",
+                FontSize = "4.5rem",
                 FontWeight = "300",
                 LineHeight = "1.167",
                 LetterSpacing = "-.01562em"
             },
             H2 = new H2Typography
             {
-                FontSize = "3.75rem",
+                FontSize = "3.25rem",
                 FontWeight = "300",
                 LineHeight = "1.2",
                 LetterSpacing = "-.00833em"
             },
             H3 = new H3Typography
             {
-                FontSize = "3rem",
+                FontSize = "2.5rem",
                 FontWeight = "400",
                 LineHeight = "1.167",
                 LetterSpacing = "0"
             },
             H4 = new H4Typography
             {
-                FontSize = "2.125rem",
-                FontWeight = "400",
+                FontSize = "1.875rem",
+                FontWeight = "500",
                 LineHeight = "1.235",
                 LetterSpacing = ".00735em"
             },
             H5 = new H5Typography
             {
-                FontSize = "1.5rem",
-                FontWeight = "400",
+                FontSize = "1.375rem",
+                FontWeight = "500",
                 LineHeight = "1.334",
                 LetterSpacing = "0"
             },
             H6 = new H6Typography
             {
-                FontSize = "1.25rem",
-                FontWeight = "400",
+                FontSize = "1.125rem",
+                FontWeight = "600",
                 LineHeight = "1.6",
                 LetterSpacing = ".0075em"
             },

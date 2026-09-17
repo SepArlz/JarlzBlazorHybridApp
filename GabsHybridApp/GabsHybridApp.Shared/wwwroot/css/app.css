@@ -1,0 +1,600 @@
+/*
+	This CSS file matches the color scheme from MudBlazor to Bootstrap when utilized for authentication.
+	The file remains available at all times for demonstration purposes,
+	but it is exclusively employed in the 'App.razor' component when authentication is enabled.
+*/
+
+.btn-primary {
+    text-transform: uppercase;
+    --bs-btn-bg: var(--mud-palette-primary) !important;
+    --bs-btn-hover-bg: var(--mud-palette-primary-darken) !important;
+}
+
+.nav-pills {
+    --bs-nav-pills-link-active-bg: var(--mud-palette-primary) !important;
+}
+
+.nav {
+    --bs-nav-link-color: var(--mud-palette-primary) !important;
+    --bs-nav-link-hover-color: var(--mud-palette-primary-darken) !important;
+}
+
+/* Modern Trendy Dark Mode (Hero Dark Theme) Enhancements */
+.dark-theme .mud-button-filled-primary,
+.mud-theme-dark .mud-button-filled-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #6366f1 100%) !important;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
+    transition: all 0.25s ease-in-out !important;
+    border: none !important;
+}
+
+.dark-theme .mud-button-filled-primary:hover,
+.mud-theme-dark .mud-button-filled-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%) !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6) !important;
+    transform: translateY(-1px);
+}
+
+.dark-theme .primary-hero-paper,
+.mud-theme-dark .primary-hero-paper {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    border: 1px solid rgba(59, 130, 246, 0.25) !important;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 0 25px rgba(37, 99, 235, 0.12) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.dark-theme .primary-hero-paper::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #3b82f6, #818cf8, #38bdf8);
+}
+
+.dark-theme .mud-chip-filled-primary,
+.mud-theme-dark .mud-chip-filled-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+}
+
+/* Modern Hero-Gradient Sync & Connectivity Status Banners */
+.sync-hero-banner {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+.sync-hero-banner::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+/* Light Mode Defaults */
+.sync-hero-banner.sync-status-synced {
+    background-color: var(--mud-palette-surface) !important;
+    border: 1px solid var(--mud-palette-success, #22c55e) !important;
+}
+.sync-hero-banner.sync-status-synced::before {
+    background: #22c55e;
+}
+
+.sync-hero-banner.sync-status-pending {
+    background-color: var(--mud-palette-surface) !important;
+    border: 1px solid var(--mud-palette-warning, #f59e0b) !important;
+}
+.sync-hero-banner.sync-status-pending::before {
+    background: #f59e0b;
+}
+
+.sync-hero-banner.sync-status-offline {
+    background-color: var(--mud-palette-surface) !important;
+    border: 1px solid var(--mud-palette-error, #ef4444) !important;
+}
+.sync-hero-banner.sync-status-offline::before {
+    background: #ef4444;
+}
+
+/* Dark Mode: Modern Hero-Gradient Look */
+.dark-theme .sync-hero-banner.sync-status-synced,
+.mud-theme-dark .sync-hero-banner.sync-status-synced {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(30, 41, 59, 0.75) 40%, rgba(15, 23, 42, 0.95) 100%) !important;
+    border: 1px solid rgba(16, 185, 129, 0.35) !important;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.12) !important;
+}
+.dark-theme .sync-hero-banner.sync-status-synced::before,
+.mud-theme-dark .sync-hero-banner.sync-status-synced::before {
+    background: linear-gradient(90deg, #10b981, #34d399, #06b6d4);
+}
+
+.dark-theme .sync-hero-banner.sync-status-pending,
+.mud-theme-dark .sync-hero-banner.sync-status-pending {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(30, 41, 59, 0.75) 40%, rgba(15, 23, 42, 0.95) 100%) !important;
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.15) !important;
+}
+.dark-theme .sync-hero-banner.sync-status-pending::before,
+.mud-theme-dark .sync-hero-banner.sync-status-pending::before {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24, #f97316);
+}
+
+.dark-theme .sync-hero-banner.sync-status-offline,
+.mud-theme-dark .sync-hero-banner.sync-status-offline {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(30, 41, 59, 0.75) 40%, rgba(15, 23, 42, 0.95) 100%) !important;
+    border: 1px solid rgba(239, 68, 68, 0.4) !important;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(239, 68, 68, 0.15) !important;
+}
+.dark-theme .sync-hero-banner.sync-status-offline::before,
+.mud-theme-dark .sync-hero-banner.sync-status-offline::before {
+    background: linear-gradient(90deg, #ef4444, #f87171, #fb923c);
+}
+
+/* Modern Hero-Gradient Inventory & Logistics Banners */
+.inventory-hero-banner {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    border-radius: 8px;
+}
+
+.inventory-hero-banner::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+/* Light Mode Gradients */
+.inventory-hero-banner.inventory-domain-office {
+    background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%) !important;
+    color: #ffffff !important;
+}
+.inventory-hero-banner.inventory-domain-office::before {
+    background: linear-gradient(90deg, #60a5fa, #3b82f6, #1d4ed8);
+}
+
+.inventory-hero-banner.inventory-domain-medical {
+    background: linear-gradient(135deg, #0288d1 0%, #01579b 100%) !important;
+    color: #ffffff !important;
+}
+.inventory-hero-banner.inventory-domain-medical::before {
+    background: linear-gradient(90deg, #38bdf8, #0288d1, #0369a1);
+}
+
+.inventory-hero-banner.inventory-domain-relief {
+    background: linear-gradient(135deg, #f57c00 0%, #e65100 100%) !important;
+    color: #ffffff !important;
+}
+.inventory-hero-banner.inventory-domain-relief::before {
+    background: linear-gradient(90deg, #fbbf24, #f57c00, #c2410c);
+}
+
+.inventory-hero-banner.equipment-hero-banner {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    color: #ffffff !important;
+}
+.inventory-hero-banner.equipment-hero-banner::before {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24, #3b82f6);
+}
+
+/* Dark Mode: Sleek Hero-Gradient Glow & Translucent Dark Surface */
+.dark-theme .inventory-hero-banner.inventory-domain-office,
+.mud-theme-dark .inventory-hero-banner.inventory-domain-office {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.16) 0%, rgba(30, 41, 59, 0.75) 40%, rgba(15, 23, 42, 0.95) 100%) !important;
+    border: 1px solid rgba(59, 130, 246, 0.35) !important;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.12) !important;
+    color: #ffffff !important;
+}
+.dark-theme .inventory-hero-banner.inventory-domain-office::before,
+.mud-theme-dark .inventory-hero-banner.inventory-domain-office::before {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd);
+}
+
+.dark-theme .inventory-hero-banner.inventory-domain-medical,
+.mud-theme-dark .inventory-hero-banner.inventory-domain-medical {
+    background: linear-gradient(135deg, rgba(2, 136, 209, 0.16) 0%, rgba(30, 41, 59, 0.75) 40%, rgba(15, 23, 42, 0.95) 100%) !important;
+    border: 1px solid rgba(2, 136, 209, 0.35) !important;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(2, 136, 209, 0.12) !important;
+    color: #ffffff !important;
+}
+.dark-theme .inventory-hero-banner.inventory-domain-medical::before,
+.mud-theme-dark .inventory-hero-banner.inventory-domain-medical::before {
+    background: linear-gradient(90deg, #0288d1, #38bdf8, #7dd3fc);
+}
+
+.dark-theme .inventory-hero-banner.inventory-domain-relief,
+.mud-theme-dark .inventory-hero-banner.inventory-domain-relief {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(30, 41, 59, 0.75) 40%, rgba(15, 23, 42, 0.95) 100%) !important;
+    border: 1px solid rgba(245, 158, 11, 0.35) !important;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.12) !important;
+    color: #ffffff !important;
+}
+.dark-theme .inventory-hero-banner.inventory-domain-relief::before,
+.mud-theme-dark .inventory-hero-banner.inventory-domain-relief::before {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24, #f97316);
+}
+
+.dark-theme .inventory-hero-banner.equipment-hero-banner,
+.mud-theme-dark .inventory-hero-banner.equipment-hero-banner {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.98) 100%) !important;
+    border: 1px solid rgba(245, 158, 11, 0.35) !important;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.12) !important;
+    color: #ffffff !important;
+}
+.dark-theme .inventory-hero-banner.equipment-hero-banner::before,
+.mud-theme-dark .inventory-hero-banner.equipment-hero-banner::before {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24, #3b82f6);
+}
+
+/* Horizontal Chip Scroller & Inverted Select for MudChipSet */
+.chipset-nowrap {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: .5rem;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.chipset-nowrap::-webkit-scrollbar {
+    display: none;
+}
+
+.chipset-nowrap .mud-chip {
+    flex: 0 0 auto;
+}
+
+.chipset-nowrap .mud-chip .mud-chip-content {
+    white-space: nowrap;
+}
+
+.invert-select .mud-chip.mud-chip-selected {
+    border-color: transparent !important;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+    color: var(--mud-palette-white) !important;
+}
+
+.invert-select .mud-chip.mud-chip-selected span,
+.invert-select .mud-chip.mud-chip-selected svg {
+    color: var(--mud-palette-white) !important;
+}
+
+.invert-select .mud-chip.mud-chip-selected.mud-chip-color-primary {
+    background: var(--mud-palette-primary);
+}
+
+.invert-select .mud-chip.mud-chip-selected.mud-chip-color-secondary {
+    background: var(--mud-palette-secondary);
+}
+
+.invert-select .mud-chip.mud-chip-selected.mud-chip-color-info {
+    background: var(--mud-palette-info);
+}
+
+.invert-select .mud-chip.mud-chip-selected.mud-chip-color-success {
+    background: var(--mud-palette-success);
+}
+
+.invert-select .mud-chip.mud-chip-selected.mud-chip-color-warning {
+    background: var(--mud-palette-warning);
+}
+
+.invert-select .mud-chip.mud-chip-selected.mud-chip-color-error {
+    background: var(--mud-palette-error);
+}
+
+.invert-select .mud-chip.mud-chip-selected.mud-chip-color-dark {
+    background: var(--mud-palette-dark);
+}
+
+/* ==========================================================================
+   🌙 Dark Mode Dialog AppBar Gradients
+   Applied EXCLUSIVELY to MudAppBar inside MudDialog (.mud-dialog .mud-appbar)
+   ========================================================================== */
+
+/* Error / Emergency Dialog AppBars (e.g. Log Emergency Incident) */
+.dark-theme .mud-dialog .mud-appbar.mud-theme-error,
+.dark-theme .mud-dialog .mud-appbar.mud-appbar-error,
+.dark-theme .mud-dialog .mud-appbar[class*="error"],
+.mud-theme-dark .mud-dialog .mud-appbar.mud-theme-error,
+.mud-theme-dark .mud-dialog .mud-appbar[class*="error"],
+[data-theme="dark"] .mud-dialog .mud-appbar[class*="error"] {
+    background: linear-gradient(135deg, #881337 0%, #be123c 45%, #e11d48 100%) !important;
+    border-bottom: 1px solid rgba(251, 113, 133, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(225, 29, 72, 0.3) !important;
+}
+
+/* Primary Dialog AppBars (e.g. Book Advance Ambulance Transport) */
+.dark-theme .mud-dialog .mud-appbar.mud-theme-primary,
+.dark-theme .mud-dialog .mud-appbar.mud-appbar-primary,
+.dark-theme .mud-dialog .mud-appbar[class*="primary"],
+.mud-theme-dark .mud-dialog .mud-appbar.mud-theme-primary,
+.mud-theme-dark .mud-dialog .mud-appbar[class*="primary"],
+[data-theme="dark"] .mud-dialog .mud-appbar[class*="primary"] {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #3b82f6 100%) !important;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Secondary Dialog AppBars */
+.dark-theme .mud-dialog .mud-appbar.mud-theme-secondary,
+.dark-theme .mud-dialog .mud-appbar.mud-appbar-secondary,
+.dark-theme .mud-dialog .mud-appbar[class*="secondary"],
+.mud-theme-dark .mud-dialog .mud-appbar.mud-theme-secondary,
+.mud-theme-dark .mud-dialog .mud-appbar[class*="secondary"],
+[data-theme="dark"] .mud-dialog .mud-appbar[class*="secondary"] {
+    background: linear-gradient(135deg, #312e81 0%, #4338ca 50%, #6366f1 100%) !important;
+    border-bottom: 1px solid rgba(165, 180, 252, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Info Dialog AppBars */
+.dark-theme .mud-dialog .mud-appbar.mud-theme-info,
+.dark-theme .mud-dialog .mud-appbar.mud-appbar-info,
+.dark-theme .mud-dialog .mud-appbar[class*="info"],
+.mud-theme-dark .mud-dialog .mud-appbar.mud-theme-info,
+.mud-theme-dark .mud-dialog .mud-appbar[class*="info"],
+[data-theme="dark"] .mud-dialog .mud-appbar[class*="info"] {
+    background: linear-gradient(135deg, #0c4a6e 0%, #0284c7 50%, #38bdf8 100%) !important;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(2, 132, 199, 0.3) !important;
+}
+
+/* Success Dialog AppBars */
+.dark-theme .mud-dialog .mud-appbar.mud-theme-success,
+.dark-theme .mud-dialog .mud-appbar.mud-appbar-success,
+.dark-theme .mud-dialog .mud-appbar[class*="success"],
+.mud-theme-dark .mud-dialog .mud-appbar.mud-theme-success,
+.mud-theme-dark .mud-dialog .mud-appbar[class*="success"],
+[data-theme="dark"] .mud-dialog .mud-appbar[class*="success"] {
+    background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%) !important;
+    border-bottom: 1px solid rgba(52, 211, 153, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(5, 150, 105, 0.3) !important;
+}
+
+/* Warning Dialog AppBars */
+.dark-theme .mud-dialog .mud-appbar.mud-theme-warning,
+.dark-theme .mud-dialog .mud-appbar.mud-appbar-warning,
+.dark-theme .mud-dialog .mud-appbar[class*="warning"],
+.mud-theme-dark .mud-dialog .mud-appbar.mud-theme-warning,
+.mud-theme-dark .mud-dialog .mud-appbar[class*="warning"],
+[data-theme="dark"] .mud-dialog .mud-appbar[class*="warning"] {
+    background: linear-gradient(135deg, #78350f 0%, #d97706 50%, #f59e0b 100%) !important;
+    border-bottom: 1px solid rgba(251, 191, 36, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3) !important;
+}
+
+/* Default / Neutral Dialog AppBars (e.g. DANA Details, User Management, AI Export, About Dialog) */
+.dark-theme .mud-dialog .mud-appbar:not([class*="primary"]):not([class*="error"]):not([class*="success"]):not([class*="warning"]):not([class*="info"]):not([class*="secondary"]),
+.mud-theme-dark .mud-dialog .mud-appbar:not([class*="primary"]):not([class*="error"]):not([class*="success"]):not([class*="warning"]):not([class*="info"]):not([class*="secondary"]),
+[data-theme="dark"] .mud-dialog .mud-appbar:not([class*="primary"]):not([class*="error"]):not([class*="success"]):not([class*="warning"]):not([class*="info"]):not([class*="secondary"]) {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ==========================================================================
+   🌙 Dark Mode Hero-Gradient Snackbars (Toast Notifications)
+   Glassmorphism, Ambient Glow, Top Accent Highlight & Hero-Gradients
+   ========================================================================== */
+
+.dark-theme .mud-snackbar,
+.mud-theme-dark .mud-snackbar,
+[data-theme="dark"] .mud-snackbar {
+    position: relative !important;
+    overflow: hidden !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-radius: 12px !important;
+    padding: 12px 18px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.dark-theme .mud-snackbar::before,
+.mud-theme-dark .mud-snackbar::before,
+[data-theme="dark"] .mud-snackbar::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+    z-index: 2;
+}
+
+/* Success Snackbar (Emerald / Mint / Cyan Hero Glow) */
+.dark-theme .mud-snackbar.mud-alert-filled-success,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-success,
+[data-theme="dark"] .mud-snackbar.mud-alert-filled-success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.26) 0%, rgba(30, 41, 59, 0.88) 45%, rgba(15, 23, 42, 0.98) 100%) !important;
+    border: 1px solid rgba(52, 211, 153, 0.45) !important;
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 0 28px rgba(16, 185, 129, 0.22) !important;
+    color: #f0fdf4 !important;
+}
+.dark-theme .mud-snackbar.mud-alert-filled-success::before,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-success::before,
+[data-theme="dark"] .mud-snackbar.mud-alert-filled-success::before {
+    background: linear-gradient(90deg, #10b981, #34d399, #06b6d4) !important;
+}
+.dark-theme .mud-snackbar.mud-alert-filled-success .mud-alert-icon,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-success .mud-alert-icon {
+    color: #34d399 !important;
+}
+
+/* Warning Snackbar (Amber / Gold / Orange Hero Glow) */
+.dark-theme .mud-snackbar.mud-alert-filled-warning,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-warning,
+[data-theme="dark"] .mud-snackbar.mud-alert-filled-warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.26) 0%, rgba(30, 41, 59, 0.88) 45%, rgba(15, 23, 42, 0.98) 100%) !important;
+    border: 1px solid rgba(251, 191, 36, 0.45) !important;
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 0 28px rgba(245, 158, 11, 0.22) !important;
+    color: #fffbeb !important;
+}
+.dark-theme .mud-snackbar.mud-alert-filled-warning::before,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-warning::before,
+[data-theme="dark"] .mud-snackbar.mud-alert-filled-warning::before {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24, #f97316) !important;
+}
+.dark-theme .mud-snackbar.mud-alert-filled-warning .mud-alert-icon,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-warning .mud-alert-icon {
+    color: #fbbf24 !important;
+}
+
+/* Error Snackbar (Crimson / Rose / Coral Hero Glow) */
+.dark-theme .mud-snackbar.mud-alert-filled-error,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-error,
+[data-theme="dark"] .mud-snackbar.mud-alert-filled-error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.26) 0%, rgba(30, 41, 59, 0.88) 45%, rgba(15, 23, 42, 0.98) 100%) !important;
+    border: 1px solid rgba(248, 113, 113, 0.45) !important;
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 0 28px rgba(239, 68, 68, 0.22) !important;
+    color: #fef2f2 !important;
+}
+.dark-theme .mud-snackbar.mud-alert-filled-error::before,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-error::before,
+[data-theme="dark"] .mud-snackbar.mud-alert-filled-error::before {
+    background: linear-gradient(90deg, #ef4444, #f87171, #fb923c) !important;
+}
+.dark-theme .mud-snackbar.mud-alert-filled-error .mud-alert-icon,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-error .mud-alert-icon {
+    color: #f87171 !important;
+}
+
+/* Info Snackbar (Electric Blue / Sky / Indigo Hero Glow) */
+.dark-theme .mud-snackbar.mud-alert-filled-info,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-info,
+[data-theme="dark"] .mud-snackbar.mud-alert-filled-info {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.26) 0%, rgba(30, 41, 59, 0.88) 45%, rgba(15, 23, 42, 0.98) 100%) !important;
+    border: 1px solid rgba(96, 165, 250, 0.45) !important;
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 0 28px rgba(37, 99, 235, 0.22) !important;
+    color: #eff6ff !important;
+}
+.dark-theme .mud-snackbar.mud-alert-filled-info::before,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-info::before,
+[data-theme="dark"] .mud-snackbar.mud-alert-filled-info::before {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa, #818cf8) !important;
+}
+.dark-theme .mud-snackbar.mud-alert-filled-info .mud-alert-icon,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-info .mud-alert-icon {
+    color: #60a5fa !important;
+}
+
+/* Normal / Primary / Default Snackbar */
+.dark-theme .mud-snackbar.mud-alert-filled-normal,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-normal,
+.dark-theme .mud-snackbar.mud-alert-filled-primary,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-primary,
+[data-theme="dark"] .mud-snackbar.mud-alert-filled-normal {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.26) 0%, rgba(30, 41, 59, 0.88) 45%, rgba(15, 23, 42, 0.98) 100%) !important;
+    border: 1px solid rgba(165, 180, 252, 0.45) !important;
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 0 28px rgba(99, 102, 241, 0.22) !important;
+    color: #eef2ff !important;
+}
+.dark-theme .mud-snackbar.mud-alert-filled-normal::before,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-normal::before,
+.dark-theme .mud-snackbar.mud-alert-filled-primary::before,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-primary::before {
+    background: linear-gradient(90deg, #6366f1, #818cf8, #a855f7) !important;
+}
+.dark-theme .mud-snackbar.mud-alert-filled-normal .mud-alert-icon,
+.mud-theme-dark .mud-snackbar.mud-alert-filled-normal .mud-alert-icon {
+    color: #a5b4fc !important;
+}
+
+/* ==========================================================================
+   App Preloader & Transition Splash Screen (Identical to MAUI)
+   ========================================================================== */
+#preloading-logo {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    z-index: 99999;
+    background-color: #fafafa;
+    transition: background-color 0.2s ease, opacity 0.2s ease, visibility 0.2s ease;
+}
+
+#preloading-logo svg {
+    width: clamp(96px, 20vmin, 192px);
+    height: auto;
+    display: block;
+}
+
+#preloading-logo svg circle {
+    fill: #2979ff;
+    stroke: #2979ff;
+}
+
+.dark-theme #preloading-logo,
+:root.dark-theme #preloading-logo,
+html.dark-theme #preloading-logo {
+    background-color: #0b0f17 !important;
+}
+
+.dark-theme #preloading-logo svg circle,
+:root.dark-theme #preloading-logo svg circle,
+html.dark-theme #preloading-logo svg circle {
+    fill: #3b82f6 !important;
+    stroke: #3b82f6 !important;
+}
+
+/* Auto-dismiss when MudBlazor mounts or enhanced load completes */
+body:has(.mud-layout) #preloading-logo,
+body:has(.mud-container) #preloading-logo,
+body:has(#main-content-container) #preloading-logo,
+#preloading-logo.splash-dismissed {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* ==========================================================================
+   Login Layout Background Optimization (Emergency Response Theme)
+   ========================================================================== */
+.login-bg-container {
+    min-height: 100vh;
+    background: radial-gradient(circle at 50% 25%, rgba(37, 99, 235, 0.08) 0%, transparent 65%),
+                linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dark-theme .login-bg-container,
+html.dark-theme .login-bg-container {
+    background: radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.18) 0%, transparent 60%),
+                linear-gradient(180deg, #070a0f 0%, #0f172a 100%) !important;
+}
+
+.login-bg-container.has-wallpaper {
+    background: transparent !important;
+}
+
+/* ==========================================================================
+   Real ID Assigned Pulse Glow Animation
+   ========================================================================== */
+@keyframes id-assigned-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(var(--mud-palette-primary-rgb), 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(var(--mud-palette-primary-rgb), 0.25);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--mud-palette-primary-rgb), 0);
+    }
+}
+
+.id-pulse-glow {
+    animation: id-assigned-pulse 1.2s ease-in-out infinite;
+    border-radius: 4px;
+}
+
+

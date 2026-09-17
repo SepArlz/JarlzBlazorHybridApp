@@ -1,4 +1,4 @@
-﻿using GabsHybridApp.Shared.Services;
+using GabsHybridApp.Shared.Services;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Storage;
 
@@ -54,11 +54,12 @@ public sealed class MauiCameraService : ICameraService
                 _ = await Permissions.RequestAsync<Permissions.StorageRead>();
         }
 
-        var file = await MediaPicker.Default.PickPhotoAsync(new MediaPickerOptions
+        var photos = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions
         {
             Title = "Select a photo"
         });
 
+        var file = photos?.FirstOrDefault();
         if (file == null) return null;
 
         var path = await SaveToAppPhotosAsync(file, ct);

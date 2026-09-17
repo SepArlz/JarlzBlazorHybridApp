@@ -1,0 +1,150 @@
+@using GabsHybridApp.Shared.Models
+@using MudBlazor
+@inject IJSRuntime JS
+
+<MudDialog>
+    <TitleContent>
+        <MudAppBar Color="Color.Dark" Elevation="0" Dense="true" Class="px-3">
+            <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Class="mr-2" />
+            <MudText Typo="Typo.h6">Commercial Invoice #@Order.OrderNumber</MudText>
+            <MudSpacer />
+            <MudButton StartIcon="@Icons.Material.Filled.Print" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="PrintInvoice" Class="mr-2">
+                Print
+            </MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="Close" Size="Size.Small" />
+        </MudAppBar>
+    </TitleContent>
+    <DialogContent>
+        <div class="invoice-container pa-4" style="background: white; color: black; min-height: 480px; font-family: 'Roboto', sans-serif;">
+            <!-- Invoice Header -->
+            <div class="d-flex justify-space-between align-start border-b pb-4 mb-4">
+                <div>
+                    <MudText Typo="Typo.h5" Class="font-weight-bold" Style="color: #1e3a8a;">GabsBlazorHybridApp Enterprises</MudText>
+                    <MudText Typo="Typo.caption" Style="color: #64748b;">Enterprise Hybrid E-Commerce & Retail Solutions</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1" Style="color: #334155;">100 Innovation Boulevard, Tech District</MudText>
+                    <MudText Typo="Typo.body2" Style="color: #334155;">contact@gabshybridapp.local | +63 (900) 123-4567</MudText>
+                </div>
+                <div class="text-right">
+                    <MudText Typo="Typo.h6" Class="font-weight-bold" Style="color: #0f172a;">INVOICE</MudText>
+                    <MudText Typo="Typo.body2" Style="color: #475569;"><b>Invoice #:</b> @Order.OrderNumber</MudText>
+                    <MudText Typo="Typo.body2" Style="color: #475569;"><b>Date:</b> @Order.OrderDateUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudText>
+                    <MudText Typo="Typo.body2" Style="color: #475569;"><b>Status:</b> @Order.Status</MudText>
+                </div>
+            </div>
+
+            <!-- Customer & Shipping -->
+            <div class="d-flex justify-space-between mb-4">
+                <div>
+                    <MudText Typo="Typo.caption" Class="font-weight-bold" Style="color: #64748b; text-transform: uppercase;">Billed To:</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold" Style="color: #0f172a;">@Order.CustomerName</MudText>
+                    @if (!string.IsNullOrWhiteSpace(Order.CustomerPhone))
+                    {
+                        <MudText Typo="Typo.body2" Style="color: #334155;">Tel: @Order.CustomerPhone</MudText>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Order.CustomerEmail))
+                    {
+                        <MudText Typo="Typo.body2" Style="color: #334155;">Email: @Order.CustomerEmail</MudText>
+                    }
+                </div>
+                <div class="text-right" style="max-width: 260px;">
+                    <MudText Typo="Typo.caption" Class="font-weight-bold" Style="color: #64748b; text-transform: uppercase;">Shipment & Payment:</MudText>
+                    <MudText Typo="Typo.body2" Style="color: #334155;"><b>Payment:</b> @Order.PaymentMethod (@Order.PaymentStatus)</MudText>
+                    @if (!string.IsNullOrWhiteSpace(Order.ShippingAddress))
+                    {
+                        <MudText Typo="Typo.body2" Style="color: #334155;"><b>Address:</b> @Order.ShippingAddress</MudText>
+                    }
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
+                <thead>
+                    <tr style="background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
+                        <th style="padding: 8px 12px; text-align: left; font-size: 0.85rem; color: #334155;">Item Description</th>
+                        <th style="padding: 8px 12px; text-align: right; font-size: 0.85rem; color: #334155; width: 100px;">Price</th>
+                        <th style="padding: 8px 12px; text-align: center; font-size: 0.85rem; color: #334155; width: 70px;">Qty</th>
+                        <th style="padding: 8px 12px; text-align: right; font-size: 0.85rem; color: #334155; width: 90px;">Discount</th>
+                        <th style="padding: 8px 12px; text-align: right; font-size: 0.85rem; color: #334155; width: 120px;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Order.Items)
+                    {
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 8px 12px; font-size: 0.9rem; color: #0f172a;">
+                                <b>@item.ProductName</b>
+                                @if (!string.IsNullOrWhiteSpace(item.ProductUnit))
+                                {
+                                    <span style="color: #64748b; font-size: 0.8rem;">(@item.ProductUnit)</span>
+                                }
+                            </td>
+                            <td style="padding: 8px 12px; text-align: right; font-size: 0.9rem; color: #334155;">@item.UnitPrice.ToString("C")</td>
+                            <td style="padding: 8px 12px; text-align: center; font-size: 0.9rem; color: #334155;">@item.Quantity</td>
+                            <td style="padding: 8px 12px; text-align: right; font-size: 0.9rem; color: #64748b;">@item.Discount.ToString("C")</td>
+                            <td style="padding: 8px 12px; text-align: right; font-size: 0.9rem; font-weight: 600; color: #0f172a;">@item.TotalPrice.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Totals Breakdown -->
+            <div class="d-flex justify-end">
+                <div style="width: 260px;">
+                    <div class="d-flex justify-space-between py-1" style="font-size: 0.875rem; color: #475569;">
+                        <span>Subtotal:</span>
+                        <span>@Order.SubTotal.ToString("C")</span>
+                    </div>
+                    @if (Order.DiscountAmount > 0)
+                    {
+                        <div class="d-flex justify-space-between py-1" style="font-size: 0.875rem; color: #059669;">
+                            <span>Discount:</span>
+                            <span>-@Order.DiscountAmount.ToString("C")</span>
+                        </div>
+                    }
+                    @if (Order.ShippingFee > 0)
+                    {
+                        <div class="d-flex justify-space-between py-1" style="font-size: 0.875rem; color: #475569;">
+                            <span>Shipping:</span>
+                            <span>@Order.ShippingFee.ToString("C")</span>
+                        </div>
+                    }
+                    <div class="d-flex justify-space-between py-2 border-t mt-1" style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">
+                        <span>Total Due:</span>
+                        <span style="color: #1d4ed8;">@Order.TotalAmount.ToString("C")</span>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Order.Notes))
+            {
+                <div class="mt-4 pa-2" style="background-color: #f8fafc; border-left: 3px solid #3b82f6; font-size: 0.85rem; color: #475569;">
+                    <b>Notes:</b> @Order.Notes
+                </div>
+            }
+
+            <!-- Footer Notice -->
+            <div class="text-center mt-6 pt-4 border-t" style="color: #94a3b8; font-size: 0.8rem;">
+                Thank you for your business! This is a system-generated commercial invoice.
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" OnClick="PrintInvoice">
+            Print Invoice
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public Order Order { get; set; } = new();
+
+    private async Task PrintInvoice()
+    {
+        await JS.InvokeVoidAsync("window.print");
+    }
+
+    private void Close() => MudDialog.Close();
+}

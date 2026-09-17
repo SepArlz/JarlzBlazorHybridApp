@@ -1,0 +1,808 @@
+@page "/account/users"
+@attribute [Authorize(Roles = "administrator,admin,Administrator,Admin")]
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@using GabsHybridApp.Shared.Data
+@using GabsHybridApp.Shared.Models
+@using GabsHybridApp.Shared.Services
+@using GabsHybridApp.Shared.States
+@using MudBlazor
+
+@inject UserService UserService
+@inject IDbContextFactory<HybridAppDbContext> DbFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>User Accounts &amp; Terminals - Gabs Blazor Hybrid</PageTitle>
+
+@if (_authChecked && !_isAdmin)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-4">
+        Access Denied: User Accounts and Device Management is restricted to Administrators only.
+    </MudAlert>
+}
+else if (_isAdmin)
+{
+    <MudContainer MaxWidth="MaxWidth.False" Class="px-0 mt-4 mb-8">
+        @* Hero Header *@
+        <div class="d-flex justify-space-between align-center mb-4 flex-wrap gap-2">
+            <div class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Size="Size.Large" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h4" Color="Color.Primary"><b>User Accounts &amp; Access Management</b></MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">
+                        Manage user credentials, assign security roles, and authorize field &amp; station terminals
+                    </MudText>
+                </div>
+            </div>
+        </div>
+
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Primary">
+            
+            @* Tab 1: Personnel User Accounts *@
+            <MudTabPanel Text="Personnel User Accounts" Icon="@Icons.Material.Filled.People">
+                <div class="pa-2 pa-md-4">
+                    @* KPI Metric Grid *@
+                    <MudGrid Class="mb-4">
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Elevation="1" Class="pa-4 border-l-4 border-primary rounded-lg">
+                                <div class="d-flex align-center justify-space-between">
+                                    <div>
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary font-weight-bold text-uppercase">Total Users</MudText>
+                                        <MudText Typo="Typo.h4" Color="Color.Primary"><b>@_users.Count</b></MudText>
+                                    </div>
+                                    <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large" Class="opacity-50" />
+                                </div>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Elevation="1" Class="pa-4 border-l-4 border-success rounded-lg">
+                                <div class="d-flex align-center justify-space-between">
+                                    <div>
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary font-weight-bold text-uppercase">Active Accounts</MudText>
+                                        <MudText Typo="Typo.h4" Color="Color.Success"><b>@ActiveUsersCount</b></MudText>
+                                    </div>
+                                    <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Color="Color.Success" Size="Size.Large" Class="opacity-50" />
+                                </div>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Elevation="1" Class="pa-4 border-l-4 border-warning rounded-lg">
+                                <div class="d-flex align-center justify-space-between">
+                                    <div>
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary font-weight-bold text-uppercase">Admins</MudText>
+                                        <MudText Typo="Typo.h4" Color="Color.Warning"><b>@AdminUsersCount</b></MudText>
+                                    </div>
+                                    <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Color="Color.Warning" Size="Size.Large" Class="opacity-50" />
+                                </div>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Elevation="1" Class="pa-4 border-l-4 border-info rounded-lg">
+                                <div class="d-flex align-center justify-space-between">
+                                    <div>
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary font-weight-bold text-uppercase">Standard Users</MudText>
+                                        <MudText Typo="Typo.h4" Color="Color.Info"><b>@StandardUsersCount</b></MudText>
+                                    </div>
+                                    <MudIcon Icon="@Icons.Material.Filled.Person" Color="Color.Info" Size="Size.Large" Class="opacity-50" />
+                                </div>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+
+                    @* Controls Toolbar *@
+                    <MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg">
+                        <div class="d-flex align-center justify-space-between flex-wrap gap-3">
+                            <div class="d-flex align-center flex-wrap gap-3 flex-grow-1">
+                                <MudTextField T="string" @bind-Value="_searchQuery" Placeholder="Search by e-mail or role..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Margin="Margin.Dense" Variant="Variant.Outlined" Class="max-w-xs" Immediate="true" autocomplete="off" />
+                                
+                                <MudSelect T="string" @bind-Value="_roleFilter" Label="Filter Role" Margin="Margin.Dense" Variant="Variant.Outlined" Class="max-w-xs">
+                                    <MudSelectItem Value="@("")">All Roles</MudSelectItem>
+                                    @foreach (var r in _availableRoles)
+                                    {
+                                        <MudSelectItem Value="@r">@r.ToUpper()</MudSelectItem>
+                                    }
+                                </MudSelect>
+
+                                <MudSelect T="string" @bind-Value="_statusFilter" Label="Filter Status" Margin="Margin.Dense" Variant="Variant.Outlined" Class="max-w-xs">
+                                    <MudSelectItem Value="@("")">All Statuses</MudSelectItem>
+                                    <MudSelectItem Value="@("active")">Active Only</MudSelectItem>
+                                    <MudSelectItem Value="@("inactive")">Inactive Only</MudSelectItem>
+                                </MudSelect>
+
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="LoadUsers" />
+                            </div>
+
+                            <div class="d-flex align-center gap-2">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.FileUpload" OnClick="OpenImportModal">
+                                    Import CSV
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenCreateUserDrawer">
+                                    Add User
+                                </MudButton>
+                            </div>
+                        </div>
+                    </MudPaper>
+
+                    @* Users Data Table *@
+                    <MudPaper Elevation="2" Class="rounded-lg overflow-hidden">
+                        <MudTable Items="@FilteredUsers" Hover="true" Striped="true" Dense="true" Elevation="0" Breakpoint="Breakpoint.Sm">
+                            <HeaderContent>
+                                <MudTh>User</MudTh>
+                                <MudTh>Assigned Security Roles</MudTh>
+                                <MudTh>Status</MudTh>
+                                <MudTh>Created On</MudTh>
+                                <MudTh>Last Login</MudTh>
+                                <MudTh Style="text-align: right;">Actions</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="User">
+                                    <div class="d-flex align-center gap-3">
+                                        <MudAvatar Color="@GetUserAvatarColor(context)" Size="Size.Medium">
+                                            @(string.IsNullOrWhiteSpace(context.Username) ? "?" : context.Username.Substring(0, 1).ToUpper())
+                                        </MudAvatar>
+                                        <div>
+                                            <MudText Typo="Typo.body2"><b>@context.Username</b></MudText>
+                                            @if (IsDefaultAdmin(context.Username))
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Class="pa-0">Default Admin</MudChip>
+                                            }
+                                        </div>
+                                    </div>
+                                </MudTd>
+
+                                <MudTd DataLabel="Roles">
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @if (string.IsNullOrWhiteSpace(context.Roles))
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary"><i>No roles assigned</i></MudText>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var role in context.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Style="@GetRoleChipStyle(role)" Icon="@GetRoleIcon(role)" Class="font-weight-medium">
+                                                    @role.ToUpper()
+                                                </MudChip>
+                                            }
+                                        }
+                                        <MudTooltip Text="Edit Roles">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Default" OnClick="() => OpenEditUserDrawer(context)" />
+                                        </MudTooltip>
+                                    </div>
+                                </MudTd>
+
+                                <MudTd DataLabel="Status">
+                                    @if (IsDefaultAdmin(context.Username))
+                                    {
+                                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Active (Locked)</MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudSwitch T="bool" Value="@context.IsActive" ValueChanged="@((bool _) => ToggleUserStatus(context))" Color="Color.Success" Label="@(context.IsActive ? "Active" : "Inactive")" />
+                                    }
+                                </MudTd>
+
+                                <MudTd DataLabel="Created">
+                                    <MudText Typo="Typo.body2">@context.CreatedOn.ToString("MMM dd, yyyy")</MudText>
+                                </MudTd>
+
+                                <MudTd DataLabel="Last Login">
+                                    <MudText Typo="Typo.body2" Color="@(context.LastLogin.HasValue ? Color.Default : Color.Secondary)">
+                                        @(context.LastLogin.HasValue ? context.LastLogin.Value.ToString("g") : "Never logged in")
+                                    </MudText>
+                                </MudTd>
+
+                                <MudTd DataLabel="Actions" Style="text-align: right;">
+                                    <div class="d-inline-flex align-center justify-end gap-1">
+                                        <MudTooltip Text="Reset Password">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Key" Color="Color.Warning" Class="x-small-button" OnClick="() => OpenResetPasswordModal(context)" />
+                                        </MudTooltip>
+                                        <MudButtonGroup Variant="Variant.Filled" Color="Color.Primary" Class="x-small-button-group">
+                                            <MudButton StartIcon="@Icons.Material.Filled.Edit" OnClick="() => OpenEditUserDrawer(context)">Edit</MudButton>
+                                            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Dense="true">
+                                                <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" Disabled="@IsDefaultAdmin(context.Username)" OnClick="() => DeleteUser(context)">Delete User</MudMenuItem>
+                                            </MudMenu>
+                                        </MudButtonGroup>
+                                    </div>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudPaper>
+                </div>
+            </MudTabPanel>
+
+            @* Tab 2: Station & Terminal Devices *@
+            <MudTabPanel Text="Authorized Field &amp; Station Terminals" Icon="@Icons.Material.Filled.TabletMac">
+                <div class="pa-2 pa-md-4">
+                    <div class="d-flex align-center justify-space-between flex-wrap gap-3 mb-4">
+                        <div>
+                            <MudText Typo="Typo.h6"><b>Terminal &amp; Station Devices</b></MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Authorize dedicated tablets, POS kiosks, and handheld terminals for offline operations and Station Mode logins.
+                            </MudText>
+                        </div>
+                        <div class="d-flex align-center gap-2">
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="LoadDevices" />
+                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.AddCircle" OnClick="OpenCreateDeviceDrawer">
+                                Register Device
+                            </MudButton>
+                        </div>
+                    </div>
+
+                    <MudPaper Elevation="2" Class="rounded-lg overflow-hidden">
+                        <MudTable Items="@_devices" Hover="true" Striped="true" Dense="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Unit / Device ID</MudTh>
+                                <MudTh>Device Name</MudTh>
+                                <MudTh>Assigned Terminal / Vehicle</MudTh>
+                                <MudTh>Status</MudTh>
+                                <MudTh>Registered On</MudTh>
+                                <MudTh>Last Synced</MudTh>
+                                <MudTh Style="text-align: right;">Actions</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Unit ID">
+                                    <div class="d-flex align-center gap-2">
+                                        <MudIcon Icon="@Icons.Material.Filled.Devices" Color="Color.Secondary" Size="Size.Small" />
+                                        <MudText Typo="Typo.body2"><b>@context.DeviceId</b></MudText>
+                                    </div>
+                                </MudTd>
+                                <MudTd DataLabel="Name">
+                                    <MudText Typo="Typo.body2">@context.DeviceName</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Assigned Terminal">
+                                    <MudText Typo="Typo.body2">@(string.IsNullOrWhiteSpace(context.AssignedLocation) ? "General Station Tablet" : context.AssignedLocation)</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Status">
+                                    <MudSwitch T="bool" Value="@context.IsActive" ValueChanged="@((bool _) => ToggleDeviceStatus(context))" Color="Color.Success" Label="@(context.IsActive ? "Active" : "Deactivated")" />
+                                </MudTd>
+                                <MudTd DataLabel="Registered">
+                                    <MudText Typo="Typo.body2">@context.RegisteredOn.ToString("MMM dd, yyyy")</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Last Synced">
+                                    <MudText Typo="Typo.body2" Color="@(context.LastSyncUtc.HasValue ? Color.Success : Color.Secondary)">
+                                        @(context.LastSyncUtc.HasValue ? context.LastSyncUtc.Value.ToLocalTime().ToString("g") : "Never")
+                                    </MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Actions" Style="text-align: right;">
+                                    <MudTooltip Text="Delete Device">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Class="x-small-button" OnClick="() => DeleteDevice(context)" />
+                                    </MudTooltip>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudPaper>
+                </div>
+            </MudTabPanel>
+
+        </MudTabs>
+    </MudContainer>
+
+    @* User Drawer from Right *@
+    <MudDrawer @bind-Open="_isUserDrawerOpen" Anchor="Anchor.Right" Elevation="16" Variant="DrawerVariant.Temporary" Width="460px" Overlay="true" OverlayAutoClose="false">
+        <MudDrawerHeader Class="d-flex align-center justify-space-between border-b pa-4 bg-primary text-white">
+            <div class="d-flex align-center gap-2">
+                <MudIcon Icon="@(_isEditUserMode ? Icons.Material.Filled.AdminPanelSettings : Icons.Material.Filled.PersonAdd)" Color="Color.Inherit" />
+                <MudText Typo="Typo.h6"><b>@_drawerTitle</b></MudText>
+            </div>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="CloseUserDrawer" />
+        </MudDrawerHeader>
+
+        <div class="pa-5 flex-grow-1 overflow-y-auto">
+            @if (!_isEditUserMode)
+            {
+                <MudTextField T="string" @bind-Value="_drawerUsername" Label="E-mail" Required="true" Variant="Variant.Outlined" Class="mb-4" autocomplete="off" autocorrect="off" spellcheck="false" />
+                <MudPasswordField @bind-Value="_drawerPassword" Label="Password" Required="true" PasswordMode="true" Variant="Variant.Outlined" IconSize="Size.Medium" Class="mb-4" autocomplete="new-password" />
+                <MudSwitch T="bool" @bind-Value="_drawerIsActive" Color="Color.Success" Class="mb-4" Label="Account Active Immediately" />
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Class="mb-4" Variant="Variant.Outlined">
+                    Editing security roles for user <b>@_editingUser?.Username</b>
+                </MudAlert>
+            }
+
+            @if (_isEditUserMode && IsDefaultAdmin(_editingUser?.Username))
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-4" Variant="Variant.Outlined" Dense="true">
+                    <b>Default Admin Account:</b> The <code>ADMINISTRATOR</code> role is required for system management and cannot be revoked.
+                </MudAlert>
+            }
+
+            <MudText Typo="Typo.subtitle2" Class="mb-2"><b>Assign Security Roles:</b></MudText>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                @foreach (var role in _availableRoles)
+                {
+                    var isSelected = _drawerSelectedRoles.Contains(role, StringComparer.OrdinalIgnoreCase);
+                    var isLockedAdminRole = _isEditUserMode && IsDefaultAdmin(_editingUser?.Username) && (role.Equals("administrator", StringComparison.OrdinalIgnoreCase) || role.Equals("admin", StringComparison.OrdinalIgnoreCase));
+                    <MudTooltip Text="@(isLockedAdminRole ? "Administrator role is permanent for the default admin account" : "")" Disabled="@(!isLockedAdminRole)">
+                        <MudChip T="string"
+                                 Style="@(isSelected ? GetRoleChipStyle(role) : "")"
+                                 Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                                 OnClick="() => ToggleDrawerRole(role)"
+                                 Selected="@isSelected"
+                                 Disabled="@isLockedAdminRole"
+                                 Icon="@(isSelected ? Icons.Material.Filled.Check : GetRoleIcon(role))">
+                            @role.ToUpper() @(isLockedAdminRole ? "(LOCKED)" : "")
+                        </MudChip>
+                    </MudTooltip>
+                }
+            </div>
+        </div>
+
+        <div class="pa-4 border-t d-flex justify-end gap-3 bg-surface">
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CloseUserDrawer">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveUserFromDrawer">Save User</MudButton>
+        </div>
+    </MudDrawer>
+
+    @* Device Drawer from Right *@
+    <MudDrawer @bind-Open="_isDeviceDrawerOpen" Anchor="Anchor.Right" Elevation="16" Variant="DrawerVariant.Temporary" Width="460px" Overlay="true" OverlayAutoClose="false">
+        <MudDrawerHeader Class="d-flex align-center justify-space-between border-b pa-4 bg-secondary text-white">
+            <div class="d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.TabletAndroid" Color="Color.Inherit" />
+                <MudText Typo="Typo.h6"><b>Register Station / Terminal Device</b></MudText>
+            </div>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="CloseDeviceDrawer" />
+        </MudDrawerHeader>
+
+        <div class="pa-5 flex-grow-1 overflow-y-auto">
+            <MudAlert Severity="Severity.Info" Class="mb-4" Variant="Variant.Outlined" Dense="true">
+                Register a dedicated unit ID to authorize offline operations and Station Mode logins on handhelds and tablets.
+                <div class="d-flex align-center gap-2 my-2">                    
+                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold" Color="Color.Secondary">Where to get the Device ID &amp; PINs?</MudText>
+                </div>
+                <MudText Typo="Typo.caption" Class="d-block mb-1">
+                    <b>1. On the Target Device:</b> Open the app, click the avatar menu or sidebar footer &gt; <b>About App</b>. The unique <b>Device ID</b> is displayed with a 1-click copy button.
+                </MudText>
+                <MudText Typo="Typo.caption" Class="d-block mb-1">
+                    <b>2. Login Screen:</b> When selecting <i>Station Mode</i>, the hardware Device ID is automatically displayed on the login card.
+                </MudText>
+                <MudText Typo="Typo.caption" Class="d-block mb-1">
+                    <b>3. Station PINs:</b> Responders and operators log into registered units using authorized 4-digit PINs:
+                    @foreach (var pin in StorageConstants.AllowedStationPins)
+                    {
+                        <code class="mr-1">@pin</code>
+                    }
+                </MudText>
+            </MudAlert>
+
+            <MudTextField T="string" @bind-Value="_newDeviceId" Label="Unit / Device ID" Placeholder="e.g. POS-01, KIOSK-ALPHA, or hardware Device ID" Required="true" Variant="Variant.Outlined" Class="mb-4" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.QrCode" HelperText="Unique identifier from About App or custom terminal callsign" />
+            <MudTextField T="string" @bind-Value="_newDeviceName" Label="Device / Tablet Name" Placeholder="e.g. Counter Checkout Tablet 1" Required="true" Variant="Variant.Outlined" Class="mb-4" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.TabletAndroid" />
+            <MudTextField T="string" @bind-Value="_newDeviceLocation" Label="Assigned Location / Vehicle (Optional)" Placeholder="e.g. Front Store Counter or Mobile Unit" Variant="Variant.Outlined" Class="mb-4" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Storefront" />
+            <MudSwitch T="bool" @bind-Value="_newDeviceIsActive" Color="Color.Success" Label="Device Active Immediately" />
+        </div>
+
+        <div class="pa-4 border-t d-flex justify-end gap-3 bg-surface">
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CloseDeviceDrawer">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveDevice">Register Device</MudButton>
+        </div>
+    </MudDrawer>
+}
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    private bool _isAdmin = false;
+    private bool _authChecked = false;
+    private List<UserAccount> _users = new();
+    private List<RegisteredDevice> _devices = new();
+    private string _searchQuery = "";
+    private string _roleFilter = "";
+    private string _statusFilter = "";
+
+    // User Slide-out Drawer State
+    private bool _isUserDrawerOpen = false;
+    private bool _isEditUserMode = false;
+    private string _drawerTitle = "Create New User";
+    private UserAccount? _editingUser;
+    private string _drawerUsername = "";
+    private string _drawerPassword = "";
+    private bool _drawerIsActive = true;
+    private HashSet<string> _drawerSelectedRoles = new(StringComparer.OrdinalIgnoreCase);
+
+    // Device Drawer State
+    private bool _isDeviceDrawerOpen = false;
+    private string _newDeviceId = "";
+    private string _newDeviceName = "";
+    private string _newDeviceLocation = "";
+    private bool _newDeviceIsActive = true;
+
+    private readonly string[] _availableRoles = new[]
+    {
+        "administrator", "manager", "operator", "supervisor", "auditor", "viewer", "user"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is not null)
+        {
+            var state = await AuthState;
+            var user = state?.User;
+            _isAdmin = user?.Identity?.IsAuthenticated == true &&
+                       (user.IsInRole("administrator") ||
+                        user.IsInRole("admin") ||
+                        user.IsInRole("Administrator") ||
+                        user.IsInRole("Admin") ||
+                        user.HasClaim(c => c.Type == ClaimTypes.Role &&
+                            (c.Value.Equals("administrator", StringComparison.OrdinalIgnoreCase) ||
+                             c.Value.Equals("admin", StringComparison.OrdinalIgnoreCase))));
+        }
+        _authChecked = true;
+
+        if (_isAdmin)
+        {
+            await RefreshAll();
+        }
+    }
+
+    private async Task RefreshAll()
+    {
+        await Task.WhenAll(LoadUsers(), LoadDevices());
+    }
+
+    private async Task LoadUsers()
+    {
+        _users = await UserService.GetAllUsersAsync();
+    }
+
+    private async Task LoadDevices()
+    {
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            _devices = await db.RegisteredDevices.OrderBy(d => d.DeviceId).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading devices: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private int ActiveUsersCount => _users.Count(u => u.IsActive);
+    private int AdminUsersCount => _users.Count(u => u.Roles != null && (u.Roles.Contains("administrator", StringComparison.OrdinalIgnoreCase) || u.Roles.Contains("admin", StringComparison.OrdinalIgnoreCase)));
+    private int StandardUsersCount => _users.Count - AdminUsersCount;
+
+    private IEnumerable<UserAccount> FilteredUsers
+    {
+        get
+        {
+            var query = _users.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_searchQuery))
+            {
+                query = query.Where(u => (u.Username != null && u.Username.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+                                      || (u.Roles != null && u.Roles.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_roleFilter))
+            {
+                query = query.Where(u => u.Roles != null && u.Roles.Contains(_roleFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_statusFilter))
+            {
+                if (_statusFilter.Equals("active", StringComparison.OrdinalIgnoreCase))
+                    query = query.Where(u => u.IsActive);
+                else if (_statusFilter.Equals("inactive", StringComparison.OrdinalIgnoreCase))
+                    query = query.Where(u => !u.IsActive);
+            }
+
+            return query;
+        }
+    }
+
+    private bool IsDefaultAdmin(string? username)
+    {
+        return !string.IsNullOrWhiteSpace(username) && username.Equals(UserAccount.DEFAULT_ADMIN_LOGIN, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Color GetUserAvatarColor(UserAccount user)
+    {
+        if (IsDefaultAdmin(user.Username)) return Color.Warning;
+        if (user.Roles != null && user.Roles.Contains("manager", StringComparison.OrdinalIgnoreCase)) return Color.Secondary;
+        if (user.Roles != null && user.Roles.Contains("operator", StringComparison.OrdinalIgnoreCase)) return Color.Success;
+        if (user.Roles != null && user.Roles.Contains("supervisor", StringComparison.OrdinalIgnoreCase)) return Color.Primary;
+        if (user.Roles != null && user.Roles.Contains("auditor", StringComparison.OrdinalIgnoreCase)) return Color.Tertiary;
+        return Color.Dark;
+    }
+
+    private string GetRoleChipStyle(string role) => role.Trim().ToLowerInvariant() switch
+    {
+        "administrator" or "admin" => $"background-color: {Colors.Red.Lighten5}; color: {Colors.Red.Darken4}; border: 1px solid {Colors.Red.Lighten2};",
+        "manager"                  => $"background-color: {Colors.DeepPurple.Lighten5}; color: {Colors.DeepPurple.Darken3}; border: 1px solid {Colors.DeepPurple.Lighten2};",
+        "supervisor"               => $"background-color: {Colors.LightBlue.Lighten5}; color: {Colors.LightBlue.Darken4}; border: 1px solid {Colors.LightBlue.Lighten2};",
+        "operator"                 => $"background-color: {Colors.Teal.Lighten5}; color: {Colors.Teal.Darken4}; border: 1px solid {Colors.Teal.Lighten2};",
+        "auditor"                  => $"background-color: {Colors.Amber.Lighten5}; color: {Colors.Amber.Darken4}; border: 1px solid {Colors.Amber.Lighten2};",
+        "viewer" or "viewonly"     => $"background-color: {Colors.BlueGray.Lighten5}; color: {Colors.BlueGray.Darken3}; border: 1px solid {Colors.BlueGray.Lighten2};",
+        _                          => $"background-color: {Colors.Gray.Lighten4}; color: {Colors.Gray.Darken3}; border: 1px solid {Colors.Gray.Lighten1};"
+    };
+
+    private string GetRoleIcon(string role) => role.Trim().ToLowerInvariant() switch
+    {
+        "administrator" or "admin" => Icons.Material.Filled.AdminPanelSettings,
+        "manager"                  => Icons.Material.Filled.Security,
+        "supervisor"               => Icons.Material.Filled.SupervisorAccount,
+        "operator"                 => Icons.Material.Filled.SupportAgent,
+        "auditor"                  => Icons.Material.Filled.FactCheck,
+        "viewer" or "viewonly"     => Icons.Material.Filled.Visibility,
+        _                          => Icons.Material.Filled.Person
+    };
+
+    private async Task ToggleUserStatus(UserAccount user)
+    {
+        if (IsDefaultAdmin(user.Username)) return;
+
+        bool newStatus = !user.IsActive;
+        UserService.SetActivation(user.Username!, newStatus);
+        Snackbar.Add($"User '{user.Username}' status changed to {(newStatus ? "Active" : "Inactive")}.", Severity.Info);
+        await LoadUsers();
+    }
+
+    private void OpenCreateUserDrawer()
+    {
+        _isEditUserMode = false;
+        _drawerTitle = "Create New User";
+        _editingUser = null;
+        _drawerUsername = "";
+        _drawerPassword = "";
+        _drawerIsActive = true;
+        _drawerSelectedRoles = new(StringComparer.OrdinalIgnoreCase) { "user" };
+        _isUserDrawerOpen = true;
+    }
+
+    private void OpenEditUserDrawer(UserAccount user)
+    {
+        _isEditUserMode = true;
+        _drawerTitle = $"Edit Roles: {user.Username}";
+        _editingUser = user;
+        _drawerUsername = user.Username ?? "";
+        _drawerPassword = "";
+        _drawerIsActive = user.IsActive;
+        _drawerSelectedRoles = new(StringComparer.OrdinalIgnoreCase);
+
+        if (!string.IsNullOrWhiteSpace(user.Roles))
+        {
+            foreach (var r in user.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                _drawerSelectedRoles.Add(r);
+            }
+        }
+
+        if (IsDefaultAdmin(user.Username))
+        {
+            _drawerSelectedRoles.Add("administrator");
+        }
+
+        _isUserDrawerOpen = true;
+    }
+
+    private void CloseUserDrawer()
+    {
+        _isUserDrawerOpen = false;
+        _editingUser = null;
+    }
+
+    private void ToggleDrawerRole(string role)
+    {
+        if (_isEditUserMode && IsDefaultAdmin(_editingUser?.Username) &&
+            (role.Equals("administrator", StringComparison.OrdinalIgnoreCase) || role.Equals("admin", StringComparison.OrdinalIgnoreCase)))
+        {
+            Snackbar.Add("Administrator role is required for the default admin account and cannot be removed.", Severity.Warning);
+            return;
+        }
+
+        if (_drawerSelectedRoles.Contains(role))
+            _drawerSelectedRoles.Remove(role);
+        else
+            _drawerSelectedRoles.Add(role);
+    }
+
+    private async Task SaveUserFromDrawer()
+    {
+        if (_isEditUserMode && _editingUser != null && IsDefaultAdmin(_editingUser.Username))
+        {
+            _drawerSelectedRoles.Add("administrator");
+        }
+
+        var rolesString = string.Join(",", _drawerSelectedRoles);
+
+        if (_isEditUserMode && _editingUser != null)
+        {
+            bool success = UserService.SetRoles(_editingUser.Username!, rolesString);
+            if (success)
+            {
+                Snackbar.Add($"Roles updated for '{_editingUser.Username}'", Severity.Success);
+                CloseUserDrawer();
+                await LoadUsers();
+            }
+            else
+            {
+                Snackbar.Add("Failed to update user roles.", Severity.Error);
+            }
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(_drawerUsername) || string.IsNullOrWhiteSpace(_drawerPassword))
+            {
+                Snackbar.Add("E-mail and password are required.", Severity.Warning);
+                return;
+            }
+
+            var resultId = UserService.Create(_drawerUsername, _drawerPassword, rolesString, requiresActivation: !_drawerIsActive);
+            if (resultId.HasValue)
+            {
+                Snackbar.Add($"User '{_drawerUsername}' created successfully!", Severity.Success);
+                CloseUserDrawer();
+                await LoadUsers();
+            }
+            else
+            {
+                Snackbar.Add("Could not create user. E-mail may already exist or contain invalid characters.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task OpenResetPasswordModal(UserAccount user)
+    {
+        var parameters = new DialogParameters { ["User"] = user };
+        var dialog = await DialogService.ShowAsync<ResetPasswordDialog>($"Reset Password: {user.Username}", parameters);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadUsers();
+        }
+    }
+
+    private async Task OpenImportModal()
+    {
+        var dialog = await DialogService.ShowAsync<ImportUsersDialog>("Import Users from CSV");
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadUsers();
+        }
+    }
+
+    private async Task DeleteUser(UserAccount user)
+    {
+        if (IsDefaultAdmin(user.Username))
+        {
+            Snackbar.Add("Default Administrator account cannot be deleted.", Severity.Warning);
+            return;
+        }
+
+        bool? confirm = await DialogService.ShowMessageBoxAsync(
+            "Confirm Delete User",
+            $"Are you sure you want to permanently delete user account '{user.Username}'?",
+            yesText: "Delete User", cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            bool success = UserService.DeleteUser(user.Id);
+            if (success)
+            {
+                Snackbar.Add($"User '{user.Username}' has been removed.", Severity.Info);
+                await LoadUsers();
+            }
+            else
+            {
+                Snackbar.Add("Failed to delete user.", Severity.Error);
+            }
+        }
+    }
+
+    // Device Management Logic
+    private void OpenCreateDeviceDrawer()
+    {
+        _newDeviceId = "";
+        _newDeviceName = "";
+        _newDeviceLocation = "";
+        _newDeviceIsActive = true;
+        _isDeviceDrawerOpen = true;
+    }
+
+    private void CloseDeviceDrawer()
+    {
+        _isDeviceDrawerOpen = false;
+    }
+
+    private async Task SaveDevice()
+    {
+        if (string.IsNullOrWhiteSpace(_newDeviceId) || string.IsNullOrWhiteSpace(_newDeviceName))
+        {
+            Snackbar.Add("Device ID and Device Name are required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var cleanId = _newDeviceId.Trim().ToUpper();
+            var existing = await db.RegisteredDevices.FirstOrDefaultAsync(d => d.DeviceId == cleanId);
+            if (existing != null)
+            {
+                Snackbar.Add($"Device ID '{cleanId}' is already registered.", Severity.Error);
+                return;
+            }
+
+            var newDev = new RegisteredDevice
+            {
+                DeviceId = cleanId,
+                DeviceName = _newDeviceName.Trim(),
+                AssignedLocation = string.IsNullOrWhiteSpace(_newDeviceLocation) ? null : _newDeviceLocation.Trim(),
+                IsActive = _newDeviceIsActive,
+                RegisteredOn = DateTime.UtcNow
+            };
+
+            db.RegisteredDevices.Add(newDev);
+            await db.SaveChangesAsync();
+
+            _isDeviceDrawerOpen = false;
+            Snackbar.Add($"Device '{cleanId}' registered successfully!", Severity.Success);
+            await LoadDevices();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving device: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ToggleDeviceStatus(RegisteredDevice device)
+    {
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var d = await db.RegisteredDevices.FirstOrDefaultAsync(x => x.DeviceId == device.DeviceId);
+            if (d != null)
+            {
+                d.IsActive = !d.IsActive;
+                await db.SaveChangesAsync();
+                Snackbar.Add($"Device '{device.DeviceId}' status changed to {(d.IsActive ? "Active" : "Deactivated")}.", Severity.Info);
+                await LoadDevices();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating device status: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteDevice(RegisteredDevice device)
+    {
+        bool? confirm = await DialogService.ShowMessageBoxAsync(
+            "Confirm Delete Device",
+            $"Are you sure you want to remove unit '{device.DeviceId}' ({device.DeviceName})?",
+            yesText: "Delete Device", cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            try
+            {
+                await using var db = await DbFactory.CreateDbContextAsync();
+                var d = await db.RegisteredDevices.FirstOrDefaultAsync(x => x.DeviceId == device.DeviceId);
+                if (d != null)
+                {
+                    db.RegisteredDevices.Remove(d);
+                    await db.SaveChangesAsync();
+                    Snackbar.Add($"Device '{device.DeviceId}' removed.", Severity.Info);
+                    await LoadDevices();
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting device: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

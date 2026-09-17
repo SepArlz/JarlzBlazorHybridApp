@@ -1,4 +1,4 @@
-﻿using GabsHybridApp.Shared.Data;
+using GabsHybridApp.Shared.Data;
 using GabsHybridApp.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
@@ -11,12 +11,10 @@ namespace GabsHybridApp.Shared.Services
     public class UserService
     {
         private readonly IDbContextFactory<HybridAppDbContext> _factory;
-        private readonly HybridAppDbContext _db;
 
         public UserService(IDbContextFactory<HybridAppDbContext> factory)
         {
             _factory = factory;
-            _db = _factory.CreateDbContext();
         }
 
         public UserAccount? Authenticate(string username, string password)
@@ -39,16 +37,26 @@ namespace GabsHybridApp.Shared.Services
             bool valid = VerifyPasswordHash(password, user.PasswordSalt, user.PasswordHash);
             if (valid)
             {
-                user.LastLogin = DateTime.Now;
-                _db.Entry(user).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                _db.SaveChanges();
-                _db.Entry(user).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+                using var db = _factory.CreateDbContext();
+                var dbUser = db.UserAccounts.FirstOrDefault(u => u.Id == user.Id);
+                if (dbUser != null)
+                {
+                    dbUser.LastLogin = DateTime.Now;
+                    db.SaveChanges();
+                }
                 user.PasswordHash = null;
                 user.PasswordSalt = null;
                 return user;
             }
 
             return null;
+        }
+
+        public bool IsAccountPendingActivation(string? username)
+        {
+            if (string.IsNullOrWhiteSpace(username)) return false;
+            var user = GetSingleUser(username.Trim());
+            return user != null && !user.IsActive;
         }
 
         public Guid? Create(string? username, string? password, string? roles = "", bool requiresActivation = false)
@@ -66,7 +74,8 @@ namespace GabsHybridApp.Shared.Services
                 Username = username.Trim().ToLower()
             };
 
-            var userExists = _db.UserAccounts.FirstOrDefault(x => x.Username!.ToLower() == user.Username.ToLower()) != null;
+            using var db = _factory.CreateDbContext();
+            var userExists = db.UserAccounts.Any(x => x.Username!.ToLower() == user.Username.ToLower());
             if (userExists)
                 return null;
 
@@ -80,9 +89,10 @@ namespace GabsHybridApp.Shared.Services
             user.Roles = Regex.Replace(roles!, @"\s+", "");
             user.CreatedOn = DateTime.Now;
             user.IsActive = !requiresActivation;
+            user.ServerSalt = Guid.NewGuid().ToString("N");
 
-            _db.UserAccounts.Add(user);
-            _db.SaveChanges();
+            db.UserAccounts.Add(user);
+            db.SaveChanges();
 
             return user.Id;
         }
@@ -102,34 +112,145 @@ namespace GabsHybridApp.Shared.Services
             var validPassword = forceChange || VerifyPasswordHash(password, user.PasswordSalt, user.PasswordHash);
             if (validPassword)
             {
+                using var db = _factory.CreateDbContext();
+                var dbUser = db.UserAccounts.FirstOrDefault(u => u.Id == user.Id);
+                if (dbUser == null) return false;
+
                 // Overwrite with new PasswordHash
                 using (var hmac = new System.Security.Cryptography.HMACSHA512())
                 {
-                    user.PasswordSalt = hmac.Key;
-                    user.PasswordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(newPassword));
+                    dbUser.PasswordSalt = hmac.Key;
+                    dbUser.PasswordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(newPassword));
                 }
 
-                _db.Entry(user).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                _db.SaveChanges();
+                dbUser.ServerSalt = Guid.NewGuid().ToString("N");
+                db.SaveChanges();
                 return true;
             }
             else
                 return false;
+        }
 
+        public List<UserAccount> GetAllUsers()
+        {
+            EnsureSeedUsers();
+            using var db = _factory.CreateDbContext();
+            return db.UserAccounts.AsNoTracking().OrderBy(u => u.Username).ToList();
+        }
+
+        public async Task<List<UserAccount>> GetAllUsersAsync()
+        {
+            EnsureSeedUsers();
+            await using var db = await _factory.CreateDbContextAsync();
+            return await db.UserAccounts.AsNoTracking().OrderBy(u => u.Username).ToListAsync();
+        }
+
+        public async Task<UserAccount?> GetUserByIdAsync(Guid id)
+        {
+            await using var db = await _factory.CreateDbContextAsync();
+            return await db.UserAccounts.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+        }
+
+        public async Task<UserAccount?> GetUserByUsernameAsync(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username)) return null;
+            await using var db = await _factory.CreateDbContextAsync();
+            return await db.UserAccounts.AsNoTracking().FirstOrDefaultAsync(u => u.Username != null && u.Username.ToLower() == username.Trim().ToLower());
+        }
+
+        public bool DeleteUser(Guid userId)
+        {
+            using var db = _factory.CreateDbContext();
+            var user = db.UserAccounts.FirstOrDefault(u => u.Id == userId);
+            if (user == null) return false;
+            if (user.Username!.Equals(UserAccount.DEFAULT_ADMIN_LOGIN, StringComparison.OrdinalIgnoreCase)) return false; // Prevent deleting default admin
+
+            db.UserAccounts.Remove(user);
+            db.SaveChanges();
+            return true;
+        }
+
+        public bool DeleteUser(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username)) return false;
+            if (username.Equals(UserAccount.DEFAULT_ADMIN_LOGIN, StringComparison.OrdinalIgnoreCase)) return false;
+
+            using var db = _factory.CreateDbContext();
+            var user = db.UserAccounts.FirstOrDefault(u => u.Username!.ToLower() == username.Trim().ToLower());
+            if (user == null) return false;
+
+            db.UserAccounts.Remove(user);
+            db.SaveChanges();
+            return true;
+        }
+
+        public bool SetRoles(string username, string roles)
+        {
+            using var db = _factory.CreateDbContext();
+            var user = db.UserAccounts.FirstOrDefault(u => u.Username!.ToLower() == username.Trim().ToLower());
+            if (user != null)
+            {
+                var roleList = (roles ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                // Prevent removing administrator role from default admin account
+                if (user.Username!.Equals(UserAccount.DEFAULT_ADMIN_LOGIN, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!roleList.Any(r => r.Equals(UserAccount.DEFAULT_ADMIN_ROLENAME, StringComparison.OrdinalIgnoreCase) || r.Equals("admin", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        roleList.Insert(0, UserAccount.DEFAULT_ADMIN_ROLENAME);
+                    }
+                }
+
+                var cleanRoles = string.Join(",", roleList);
+
+                user.Roles = cleanRoles;
+                db.SaveChanges();
+                return true;
+            }
+            return false;
+        }
+
+        public int BatchImportUsers(IEnumerable<(string username, string password, string roles, bool isActive)> users)
+        {
+            using var db = _factory.CreateDbContext();
+            int importedCount = 0;
+            foreach (var item in users)
+            {
+                if (string.IsNullOrWhiteSpace(item.username) || string.IsNullOrWhiteSpace(item.password))
+                    continue;
+
+                var existing = db.UserAccounts.Any(x => x.Username!.ToLower() == item.username.Trim().ToLower());
+                if (existing)
+                    continue;
+
+                var id = Create(item.username, item.password, item.roles, requiresActivation: !item.isActive);
+                if (id.HasValue)
+                    importedCount++;
+            }
+            return importedCount;
         }
 
         private void CreateAdmin()
         {
-            var hasAdmin = _db.UserAccounts.FirstOrDefault(x => x.Roles == UserAccount.DEFAULT_ADMIN_ROLENAME) != null;
+            using var db = _factory.CreateDbContext();
+            var hasAdmin = db.UserAccounts.Any(x => x.Roles == UserAccount.DEFAULT_ADMIN_ROLENAME || x.Username == UserAccount.DEFAULT_ADMIN_LOGIN);
             if (!hasAdmin)
             {
                 Create(UserAccount.DEFAULT_ADMIN_LOGIN, UserAccount.DEFAULT_ADMIN_LOGIN, UserAccount.DEFAULT_ADMIN_ROLENAME);
             }
         }
 
-        private UserAccount? GetSingleUser(string username)
+        private void EnsureSeedUsers()
         {
-            return _db.UserAccounts.SingleOrDefault(x => x.Username!.ToLower() == username.ToLower());
+            CreateAdmin();
+        }
+
+        public UserAccount? GetSingleUser(string username)
+        {
+            using var db = _factory.CreateDbContext();
+            return db.UserAccounts.AsNoTracking().SingleOrDefault(x => x.Username!.ToLower() == username.Trim().ToLower());
         }
 
         private bool VerifyPasswordHash(string userPassword, byte[]? passwordSalt, byte[]? passwordHash)
@@ -151,13 +272,23 @@ namespace GabsHybridApp.Shared.Services
 
         public string SetActivation(string username, bool isActive)
         {
-            var user = GetSingleUser(username);
+            using var db = _factory.CreateDbContext();
+            var user = db.UserAccounts.FirstOrDefault(u => u.Username!.ToLower() == username.Trim().ToLower());
             if (user != null)
             {
+                if (user.Username!.Equals(UserAccount.DEFAULT_ADMIN_LOGIN, StringComparison.OrdinalIgnoreCase))
+                {
+                    user.IsActive = true;
+                    return "default admin cannot be deactivated";
+                }
+
                 user.IsActive = isActive;
-                _db.Entry(user).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                _db.SaveChanges();
-                return "user is " + (user!.IsActive ? "active" : "inactive");
+                if (!isActive)
+                {
+                    user.ServerSalt = Guid.NewGuid().ToString("N");
+                }
+                db.SaveChanges();
+                return "user is " + (user.IsActive ? "active" : "inactive");
             }
 
             return "user not found";
@@ -165,14 +296,14 @@ namespace GabsHybridApp.Shared.Services
 
         public bool AssignRoles(string username, string roles = "")
         {
-            var user = GetSingleUser(username);
+            using var db = _factory.CreateDbContext();
+            var user = db.UserAccounts.FirstOrDefault(u => u.Username!.ToLower() == username.Trim().ToLower());
             if (user != null)
             {
                 roles = Regex.Replace(roles!, @"\s+", "");
-                var arrRoles = user.Roles!.Split(',').Concat(roles.Split(',')).Distinct();
+                var arrRoles = (user.Roles ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).Concat(roles.Split(',')).Distinct();
                 user.Roles = string.Join(",", arrRoles);
-                _db.Entry(user).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                _db.SaveChanges();
+                db.SaveChanges();
                 return true;
             }
 
@@ -181,19 +312,95 @@ namespace GabsHybridApp.Shared.Services
 
         public bool RemoveRoles(string username, string roles = "")
         {
-            var user = GetSingleUser(username);
+            using var db = _factory.CreateDbContext();
+            var user = db.UserAccounts.FirstOrDefault(u => u.Username!.ToLower() == username.Trim().ToLower());
             if (user != null)
             {
                 roles = Regex.Replace(roles!, @"\s+", "");
-                var arrRoles = user.Roles!.Split(',');
-                arrRoles = arrRoles.Where(x => !roles.Split(',').Contains(x)).ToArray();
+                var rolesToRemove = roles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                var arrRoles = (user.Roles ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(x => !rolesToRemove.Contains(x, StringComparer.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (user.Username!.Equals(UserAccount.DEFAULT_ADMIN_LOGIN, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!arrRoles.Any(r => r.Equals(UserAccount.DEFAULT_ADMIN_ROLENAME, StringComparison.OrdinalIgnoreCase) || r.Equals("admin", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        arrRoles.Insert(0, UserAccount.DEFAULT_ADMIN_ROLENAME);
+                    }
+                }
+
                 user.Roles = string.Join(",", arrRoles);
-                _db.Entry(user).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                _db.SaveChanges();
+                db.SaveChanges();
                 return true;
             }
 
             return false;
+        }
+
+        public List<string> GetLocalUsernames()
+        {
+            using var db = _factory.CreateDbContext();
+            return db.UserAccounts
+                .AsNoTracking()
+                .Where(u => !string.IsNullOrWhiteSpace(u.Username))
+                .Select(u => u.Username!)
+                .ToList();
+        }
+
+        public int UpsertSyncedUsers(IEnumerable<UserAccount> users)
+        {
+            if (users == null) return 0;
+            using var db = _factory.CreateDbContext();
+            int count = 0;
+
+            foreach (var synced in users)
+            {
+                if (string.IsNullOrWhiteSpace(synced.Username)) continue;
+
+                var existing = db.UserAccounts.FirstOrDefault(u =>
+                    u.Id == synced.Id ||
+                    (u.Username != null && u.Username.ToLower() == synced.Username.ToLower()));
+
+                if (existing != null)
+                {
+                    // Update credentials and role states
+                    existing.Username = synced.Username;
+                    existing.Roles = synced.Roles;
+                    existing.IsActive = synced.IsActive;
+                    existing.ServerSalt = synced.ServerSalt;
+                    if (synced.PasswordHash != null && synced.PasswordSalt != null)
+                    {
+                        existing.PasswordHash = synced.PasswordHash;
+                        existing.PasswordSalt = synced.PasswordSalt;
+                    }
+                }
+                else
+                {
+                    // Insert new cached user
+                    var newUser = new UserAccount
+                    {
+                        Id = synced.Id == Guid.Empty ? Guid.NewGuid() : synced.Id,
+                        Username = synced.Username.Trim().ToLower(),
+                        PasswordHash = synced.PasswordHash,
+                        PasswordSalt = synced.PasswordSalt,
+                        Roles = synced.Roles,
+                        IsActive = synced.IsActive,
+                        ServerSalt = synced.ServerSalt,
+                        CreatedOn = synced.CreatedOn == default ? DateTime.Now : synced.CreatedOn,
+                        LastLogin = synced.LastLogin
+                    };
+                    db.UserAccounts.Add(newUser);
+                }
+                count++;
+            }
+
+            if (count > 0)
+            {
+                db.SaveChanges();
+            }
+
+            return count;
         }
     }
 }
@@ -225,4 +432,3 @@ namespace GabsHybridApp.Shared.Models
         public string? ServerSalt { get; set; }
     }
 }
-

@@ -33,10 +33,7 @@
         color: var(--mud-palette-white) !important; 
     }
 
-    .invert-select .mud-chip.mud-chip-selected span {
-        color: var(--mud-palette-white) !important;
-    }
-
+    .invert-select .mud-chip.mud-chip-selected span,
     .invert-select .mud-chip.mud-chip-selected svg {
         color: var(--mud-palette-white) !important;
     }
@@ -56,27 +53,20 @@
     .invert-select .mud-chip.mud-chip-selected.mud-chip-color-success {
         background: var(--mud-palette-success);
     }
+
+    .invert-select .mud-chip.mud-chip-selected.mud-chip-color-warning {
+        background: var(--mud-palette-warning);
+    }
 </style>
-
-@if (IsDarkMode)
-{
-    <style>
-        .mud-chip.mud-chip-outlined {
-            color: var(--mud-palette-text-dark) !important;
-        }
-
-        .mud-chip.mud-chip-outlined > svg, .mud-chip.mud-chip-outlined > .mud-chip-content {
-            color: var(--mud-palette-text-dark) !important;
-        }
-    </style>
-}
 
 <div class="d-flex flex-column gap-2">
     <div class="d-flex align-center gap-3">
-        <MudIcon Icon="@Icons.Material.Filled.Widgets" Color="Color.Primary" Size="Size.Large" />
+        <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large">
+            <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Large" />
+        </MudAvatar>
         <div>
-            <MudText Typo="Typo.h4" Class="font-weight-bold">Component Showcase</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Showcasing premium features of MudBlazor & CodeBeam Extensions</MudText>
+            <MudText Typo="Typo.h5" Class="font-weight-bold">Component Showcase Gallery</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Demonstrating MudBlazor & CodeBeam MudExtensions</MudText>
         </div>
     </div>
     <MudDivider Class="my-2" />
@@ -88,15 +78,16 @@
                 id="component-demos-chipset"
                 @bind-SelectedValue="_selectedDemo"
                 SelectionMode="SelectionMode.SingleSelection"
-                Class="chipset-nowrap invert-select my-4 mx-n4 px-4">
+                Class="chipset-nowrap invert-select my-3 mx-n4 px-4">
         <MudChip Variant="Variant.Outlined" Color="Color.Primary" Icon="@Icons.Material.Filled.MenuOpen" Value="DemoType.Drawer">Drawer</MudChip>
-        <MudChip Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.Web" Value="DemoType.Dialog">Dialog</MudChip>
+        <MudChip Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.Web" Value="DemoType.Dialog">Dialogs</MudChip>
+        <MudChip Variant="Variant.Outlined" Color="Color.Success" Icon="@Icons.Material.Filled.PieChart" Value="DemoType.Charts">Charts</MudChip>
         <MudChip Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Animation" Value="DemoType.Animate">Animate</MudChip>
-        <MudChip Variant="Variant.Outlined" Color="Color.Success" Icon="@Icons.Material.Filled.VerticalAlignTop" Value="DemoType.ScrollToTop">ScrollToTop</MudChip>
+        <MudChip Variant="Variant.Outlined" Color="Color.Warning" Icon="@Icons.Material.Filled.Psychology" Value="DemoType.AiExport">AI Reports</MudChip>
     </MudChipSet>
 </MudHidden>
 
-<MudGrid Class="mt-3">
+<MudGrid Class="mt-2">
     <!-- Desktop navigation sidebar (hidden on mobile) -->
     <MudItem xs="12" md="3" Class="d-none d-md-block">
         <MudCard Outlined="true" Class="pa-3 mud-background-grey">
@@ -106,17 +97,20 @@
                     <ChildContent>Drawer Demo</ChildContent>
                 </MudListItem>
                 <MudListItem Value="DemoType.Dialog" Icon="@Icons.Material.Filled.Web" Class="rounded-lg mb-1">
-                    <ChildContent>Dialog Demo</ChildContent>
+                    <ChildContent>Dialogs &amp; Alerts</ChildContent>
+                </MudListItem>
+                <MudListItem Value="DemoType.Charts" Icon="@Icons.Material.Filled.PieChart" Class="rounded-lg mb-1">
+                    <ChildContent>Interactive Charts</ChildContent>
                 </MudListItem>
             </MudList>
 
-            <MudText Typo="Typo.overline" Class="px-3 font-weight-bold" Color="Color.Secondary">CodeBeam Extensions</MudText>
+            <MudText Typo="Typo.overline" Class="px-3 font-weight-bold" Color="Color.Secondary">CodeBeam &amp; Advanced</MudText>
             <MudList T="DemoType" SelectedValue="_selectedDemo" SelectedValueChanged="OnSelectedDemoChanged" Color="Color.Primary" Class="pa-0">
                 <MudListItem Value="DemoType.Animate" Icon="@Icons.Material.Filled.Animation" Class="rounded-lg mb-1">
-                    <ChildContent>Animate Demo</ChildContent>
+                    <ChildContent>MudAnimate Demo</ChildContent>
                 </MudListItem>
-                <MudListItem Value="DemoType.ScrollToTop" Icon="@Icons.Material.Filled.VerticalAlignTop" Class="rounded-lg mb-1">
-                    <ChildContent>ScrollToTop Demo</ChildContent>
+                <MudListItem Value="DemoType.AiExport" Icon="@Icons.Material.Filled.Psychology" Class="rounded-lg mb-1">
+                    <ChildContent>AI Export Synthesis</ChildContent>
                 </MudListItem>
             </MudList>
         </MudCard>
@@ -124,34 +118,26 @@
 
     <!-- Main Showcase Area -->
     <MudItem xs="12" md="9">
-        <MudCard Outlined="true" Class="pa-5">
+        <MudCard Outlined="true" Class="pa-4">
             @if (_selectedDemo == DemoType.Drawer)
             {
                 <DrawerDemo />
             }
-            else
+            else if (_selectedDemo == DemoType.Dialog)
             {
-                <div class="d-flex flex-column align-center justify-center py-12 text-center" style="min-height: 380px;">
-                    <div class="mb-4 d-flex align-center justify-center rounded-circle" style="width: 80px; height: 80px; background-color: var(--mud-palette-primary-hover);">
-                        <MudIcon Icon="@GetDemoIcon(_selectedDemo)" Size="Size.Large" Color="Color.Primary" Style="font-size: 3rem;" />
-                    </div>
-                    <MudText Typo="Typo.h5" Class="font-weight-bold mb-2">@GetDemoName(_selectedDemo)</MudText>
-                    <MudText Typo="Typo.subtitle2" Color="Color.Success" Class="font-weight-bold mb-4">✨ Dynamic Extension Feature</MudText>
-                    
-                    <MudCard Outlined="true" Class="pa-4 max-w-sm mud-background-grey">
-                        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="max-width: 400px;">
-                            The demo page for <strong>@GetDemoName(_selectedDemo)</strong> is currently under development. In the next release, we'll demonstrate advanced animation bindings and responsive screen features using CodeBeam MudBlazor Extensions!
-                        </MudText>
-                    </MudCard>
-                    
-                    <MudButton Variant="Variant.Outlined" 
-                               Color="Color.Primary" 
-                               Class="mt-6 rounded-pill" 
-                               StartIcon="@Icons.Material.Filled.ArrowBack" 
-                               OnClick='() => OnSelectedDemoChanged(DemoType.Drawer)'>
-                        Back to Drawer Demo
-                    </MudButton>
-                </div>
+                <DialogDemo />
+            }
+            else if (_selectedDemo == DemoType.Charts)
+            {
+                <ChartsDemo />
+            }
+            else if (_selectedDemo == DemoType.Animate)
+            {
+                <AnimateDemo />
+            }
+            else if (_selectedDemo == DemoType.AiExport)
+            {
+                <AiExportDemo />
             }
         </MudCard>
     </MudItem>
@@ -169,13 +155,9 @@
         {
             try
             {
-                // Init mobile horizontal chipset scroll handlers if element renders
                 await JS.InvokeVoidAsync("gabsScroll.initHorizontalScroll", "component-demos-chipset");
             }
-            catch
-            {
-                // Handle quietly if not available in layout
-            }
+            catch { }
         }
     }
 
@@ -185,29 +167,12 @@
         StateHasChanged();
     }
 
-    private string GetDemoName(DemoType demo) => demo switch
-    {
-        DemoType.Drawer => "Drawer Demo",
-        DemoType.Dialog => "Dialog Demo",
-        DemoType.Animate => "Animate Extension Demo",
-        DemoType.ScrollToTop => "ScrollToTop Extension Demo",
-        _ => "Demo"
-    };
-
-    private string GetDemoIcon(DemoType demo) => demo switch
-    {
-        DemoType.Drawer => Icons.Material.Filled.MenuOpen,
-        DemoType.Dialog => Icons.Material.Filled.Web,
-        DemoType.Animate => Icons.Material.Filled.Animation,
-        DemoType.ScrollToTop => Icons.Material.Filled.VerticalAlignTop,
-        _ => Icons.Material.Filled.Widgets
-    };
-
     public enum DemoType
     {
         Drawer,
         Dialog,
+        Charts,
         Animate,
-        ScrollToTop
+        AiExport
     }
 }

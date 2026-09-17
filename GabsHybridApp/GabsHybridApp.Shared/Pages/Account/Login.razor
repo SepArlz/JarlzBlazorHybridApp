@@ -1,4 +1,4 @@
-﻿@page "/account/login"
+@page "/account/login"
 @layout Layout.LoginLayout
 @attribute [AllowAnonymous]
 
@@ -36,12 +36,17 @@
 
 @code {
     [SupplyParameterFromForm] 
-    public LoginDTO Credential { get; set; } = new LoginDTO();
+    public LoginDTO Credential { get; set; } = default!;
 
     [SupplyParameterFromQuery(Name = "ReturnUrl")] 
     public string? ReturnUrl { get; set; }
 
     bool isSubmitting;
+
+    protected override void OnInitialized()
+    {
+        Credential ??= new();
+    }
 
     async Task OnLogin()
     {

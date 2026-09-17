@@ -1,0 +1,138 @@
+@using System.Text
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<MudGrid Class="mt-2">
+    <MudItem xs="12" md="4">
+        <MudCard Outlined="true" Class="pa-4 rounded-lg">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Secondary" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.Psychology" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">AI Document Synthesis</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Generate structured insights</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudStack Spacing="3">
+                    <MudSelect T="string" Label="Synthesis Format" @bind-Value="_selectedFormat" Variant="Variant.Outlined" Dense="true">
+                        <MudSelectItem Value="@("Executive Markdown")">Executive Markdown (.md)</MudSelectItem>
+                        <MudSelectItem Value="@("JSON Operational Log")">JSON Operational Log (.json)</MudSelectItem>
+                        <MudSelectItem Value="@("Tabular Audit CSV")">Tabular Audit CSV (.csv)</MudSelectItem>
+                    </MudSelect>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="GenerateExport" Disabled="_isGenerating">
+                        @(_isGenerating ? "Synthesizing..." : "Generate Document")
+                    </MudButton>
+
+                    @if (!string.IsNullOrWhiteSpace(_generatedContent))
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard">
+                            Copy Content
+                        </MudButton>
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="8">
+        <MudCard Outlined="true" Class="pa-4 rounded-lg">
+            <div class="d-flex justify-space-between align-center mb-2">
+                <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Generated AI Synthesis Output</MudText>
+                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">Ready</MudChip>
+            </div>
+            <MudTextField @bind-Value="_generatedContent" Lines="14" Variant="Variant.Outlined" ReadOnly="true" Style="font-family: 'Consolas', monospace; font-size: 0.85rem;" />
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _selectedFormat = "Executive Markdown";
+    private string _generatedContent = "";
+    private bool _isGenerating;
+
+    protected override void OnInitialized()
+    {
+        GenerateDefaultSample();
+    }
+
+    private void GenerateDefaultSample()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("# EXECUTIVE OPERATIONS & E-COMMERCE SITREP");
+        sb.AppendLine($"**Date/Time:** {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+        sb.AppendLine($"**Architecture:** .NET 10 Blazor Hybrid + MudBlazor v9.9.0");
+        sb.AppendLine();
+        sb.AppendLine("## 1. Operational Executive Summary");
+        sb.AppendLine("- Core database transactions completed across Products, Orders, and System Audit tables.");
+        sb.AppendLine("- Real-time SignalR circuit latency remained below 15ms with backpressure coordinator active.");
+        sb.AppendLine("- Automated pre-restore safety snapshots validated with cryptographic SHA-256 digests.");
+        sb.AppendLine();
+        sb.AppendLine("## 2. Telemetry & Fulfillment Metrics");
+        sb.AppendLine("| Metric Category | Target SLA | Current Value | Status |");
+        sb.AppendLine("| :--- | :--- | :--- | :--- |");
+        sb.AppendLine("| Order Processing Time | < 2.0s | 0.84s | OPTIMAL |");
+        sb.AppendLine("| SignalR Heartbeat | 5.0s | 4.98s | CONNECTED |");
+        sb.AppendLine("| Database Memory Footprint | < 120 MB | 58.4 MB | OPTIMAL |");
+        _generatedContent = sb.ToString();
+    }
+
+    private async Task GenerateExport()
+    {
+        _isGenerating = true;
+        StateHasChanged();
+
+        await Task.Delay(600);
+
+        if (_selectedFormat.Contains("JSON"))
+        {
+            _generatedContent = """
+            {
+              "system": "GabsBlazorHybridApp",
+              "version": "1.0.0",
+              "timestampUtc": "2026-09-18T03:40:00Z",
+              "telemetry": {
+                "activeCircuits": 1,
+                "offlineQueuePending": 0,
+                "ordersProcessedToday": 24,
+                "revenueToday": 18450.00
+              },
+              "health": "Healthy"
+            }
+            """;
+        }
+        else if (_selectedFormat.Contains("CSV"))
+        {
+            _generatedContent = """
+            OrderId,OrderNumber,CustomerName,TotalAmount,Status,OrderDateUtc
+            1,ORD-20260918-0001,John Doe,1250.00,Delivered,2026-09-18T01:15:00Z
+            2,ORD-20260918-0002,Jane Smith,840.50,Processing,2026-09-18T02:30:00Z
+            3,ORD-20260918-0003,Acme Corp,4500.00,Shipped,2026-09-18T03:00:00Z
+            """;
+        }
+        else
+        {
+            GenerateDefaultSample();
+        }
+
+        _isGenerating = false;
+        Snackbar.Add($"Synthesized {_selectedFormat} document successfully!", Severity.Success);
+    }
+
+    private async Task CopyToClipboard()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _generatedContent);
+            Snackbar.Add("Copied export to clipboard!", Severity.Info);
+        }
+        catch
+        {
+            Snackbar.Add("Could not access clipboard directly.", Severity.Warning);
+        }
+    }
+}

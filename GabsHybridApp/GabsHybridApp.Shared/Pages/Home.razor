@@ -1,30 +1,129 @@
 @page "/"
+@using GabsHybridApp.Shared.Models
 @using GabsHybridApp.Shared.Services
 @inject IFormFactor FormFactor
+@inject NavigationManager NavManager
 
-<PageTitle>Home - .NET 10 Hybrid App</PageTitle>
+<PageTitle>Home - GabsBlazorHybridApp (.NET 10)</PageTitle>
 
 <style>
-    .hero-banner {
-        background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
-        color: white;
-        border-radius: 12px;
-        padding: 3rem 2rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 24px rgba(21, 101, 192, 0.15);
+    .wallet-action-card {
+        border: 1px solid var(--mud-palette-lines-default) !important;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+        cursor: pointer;
+    }
+    .wallet-action-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--mud-elevation-6) !important;
+        border-color: var(--mud-palette-primary) !important;
+    }
+    .wallet-action-card:active {
+        transform: translateY(-1px);
+    }
+
+    .wallet-card-title {
+        line-height: 1.35;
+        font-weight: 600;
+    }
+
+    /* Dark Mode Hero Gradient Effects */
+    .dark-theme .wallet-action-card,
+    .mud-theme-dark .wallet-action-card {
         position: relative;
         overflow: hidden;
     }
 
-    .hero-banner::before {
+    .dark-theme .wallet-action-card::before,
+    .mud-theme-dark .wallet-action-card::before {
         content: "";
         position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-        pointer-events: none;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        z-index: 1;
+    }
+
+    /* 1. Products & Orders - Blue Hero Gradient */
+    .dark-theme .wallet-card-primary,
+    .mud-theme-dark .wallet-card-primary {
+        background: radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.22) 0%, transparent 65%),
+                    linear-gradient(145deg, #1e293b 0%, #0f172a 100%) !important;
+        border: 1px solid rgba(59, 130, 246, 0.35) !important;
+        box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 0 15px rgba(37, 99, 235, 0.12) !important;
+    }
+    .dark-theme .wallet-card-primary::before,
+    .mud-theme-dark .wallet-card-primary::before {
+        background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #818cf8 100%);
+    }
+
+    /* 2. Device Features - Cyan / Sky Hero Gradient */
+    .dark-theme .wallet-card-info,
+    .mud-theme-dark .wallet-card-info {
+        background: radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.22) 0%, transparent 65%),
+                    linear-gradient(145deg, #1e293b 0%, #0f172a 100%) !important;
+        border: 1px solid rgba(6, 182, 212, 0.35) !important;
+        box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 0 15px rgba(6, 182, 212, 0.12) !important;
+    }
+    .dark-theme .wallet-card-info::before,
+    .mud-theme-dark .wallet-card-info::before {
+        background: linear-gradient(90deg, #06b6d4 0%, #38bdf8 50%, #67e8f9 100%);
+    }
+
+    /* 3. Component Showcase - Amber / Gold Hero Gradient */
+    .dark-theme .wallet-card-warning,
+    .mud-theme-dark .wallet-card-warning {
+        background: radial-gradient(circle at 15% 15%, rgba(245, 158, 11, 0.22) 0%, transparent 65%),
+                    linear-gradient(145deg, #1e293b 0%, #0f172a 100%) !important;
+        border: 1px solid rgba(245, 158, 11, 0.35) !important;
+        box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 0 15px rgba(245, 158, 11, 0.12) !important;
+    }
+    .dark-theme .wallet-card-warning::before,
+    .mud-theme-dark .wallet-card-warning::before {
+        background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%);
+    }
+
+    /* 4. Backup & Maintenance - Emerald / Green Hero Gradient */
+    .dark-theme .wallet-card-success,
+    .mud-theme-dark .wallet-card-success {
+        background: radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.22) 0%, transparent 65%),
+                    linear-gradient(145deg, #1e293b 0%, #0f172a 100%) !important;
+        border: 1px solid rgba(16, 185, 129, 0.35) !important;
+        box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 0 15px rgba(16, 185, 129, 0.12) !important;
+    }
+    .dark-theme .wallet-card-success::before,
+    .mud-theme-dark .wallet-card-success::before {
+        background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+    }
+
+    /* Luminous Avatar Glow in Dark Mode */
+    .dark-theme .wallet-card-primary .mud-avatar,
+    .mud-theme-dark .wallet-card-primary .mud-avatar {
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45) !important;
+    }
+    .dark-theme .wallet-card-info .mud-avatar,
+    .mud-theme-dark .wallet-card-info .mud-avatar {
+        box-shadow: 0 4px 14px rgba(6, 182, 212, 0.45) !important;
+    }
+    .dark-theme .wallet-card-warning .mud-avatar,
+    .mud-theme-dark .wallet-card-warning .mud-avatar {
+        box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45) !important;
+    }
+    .dark-theme .wallet-card-success .mud-avatar,
+    .mud-theme-dark .wallet-card-success .mud-avatar {
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45) !important;
+    }
+
+    .home-hero-banner {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px !important;
+        padding: 2.5rem 2rem;
+        margin-bottom: 2rem;
+        transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     .glass-badge {
@@ -41,30 +140,6 @@
         gap: 6px;
     }
 
-    .feature-card {
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
-        border-radius: 8px;
-    }
-
-    .feature-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--mud-elevation-4);
-    }
-
-    .doc-card {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        transition: transform 0.2s ease, border-color 0.2s ease;
-        border: 1px solid var(--mud-palette-lines-inputs);
-    }
-
-    .doc-card:hover {
-        transform: translateY(-2px);
-        border-color: var(--mud-palette-primary);
-    }
-
     .code-box {
         background-color: var(--mud-palette-background-grey);
         border-radius: 6px;
@@ -77,10 +152,13 @@
 </style>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4 pb-12">
-    <!-- Hero Banner -->
-    <div class="hero-banner">
-        <div class="d-flex flex-column gap-3">
-            <div class="d-flex flex-wrap gap-2 mb-2">
+    <!-- Command Center Hero Banner -->
+    <div class="home-hero-banner primary-hero-paper">
+        <div class="hero-ambient-glow"></div>
+        <div class="hero-text-scrim"></div>
+
+        <div class="d-flex flex-column gap-3" style="position: relative; z-index: 10;">
+            <div class="d-flex flex-wrap gap-2 mb-1">
                 <span class="glass-badge">
                     <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" /> .NET 10.0 LTS
                 </span>
@@ -88,48 +166,139 @@
                     <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" /> C# 14
                 </span>
                 <span class="glass-badge">
-                    <MudIcon Icon="@Icons.Material.Filled.DesktopMac" Size="Size.Small" /> @FormFactor.GetFormFactor()
+                    <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Small" /> MudBlazor v9
                 </span>
                 <span class="glass-badge">
-                    <MudIcon Icon="@Icons.Material.Filled.SettingsSuggest" Size="Size.Small" /> @FormFactor.GetPlatform()
+                    <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" /> @FormFactor.GetFormFactor() / @FormFactor.GetPlatform()
                 </span>
             </div>
-            
+
             <MudText Typo="Typo.h3" Class="font-weight-bold" Style="font-size: clamp(1.8rem, 4vw, 2.8rem); line-height: 1.2;">
-                Next-Gen Blazor Hybrid with .NET 10
+                Modern .NET 10 Hybrid Enterprise Template
             </MudText>
-            
-            <MudText Typo="Typo.subtitle1" Style="opacity: 0.9; max-width: 700px; font-weight: 300;">
-                Experience state-of-the-art JIT compiler performance, native device integration with improved HybridWebView, and AI-ready architectures in this high-performance cross-platform application.
+
+            <MudText Typo="Typo.subtitle1" Style="opacity: 0.9; max-width: 760px; font-weight: 300;">
+                High-performance unified architecture powering Web, Android, iOS, and Windows Desktop with reactive SignalR synchronization, offline-first SQLite, database-agnostic backup & restore, and dark hero aesthetics.
             </MudText>
         </div>
     </div>
 
-    <!-- Main Content & Feature Explorer -->
+    <!-- Hero Action Cards (Wallet Style Navigation) -->
+    <MudGrid Class="mb-6">
+        <!-- 1. Products & Orders -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="wallet-action-card wallet-card-primary pa-4 rounded-lg" Elevation="2" @onclick='() => NavManager.NavigateTo("/orders")'>
+                <div class="d-flex align-center gap-3 mb-3">
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />
+                    </MudAvatar>
+                    <div>
+                        <MudText Typo="Typo.h6" Class="wallet-card-title">Product Orders</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">CRUD & POS Flow</MudText>
+                    </div>
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+                    Manage multi-line orders, dynamic calculations, real-time statuses, and print-ready invoices.
+                </MudText>
+                <div class="d-flex align-center gap-1 text-primary">
+                    <MudText Typo="Typo.caption" Class="font-weight-bold">View Orders</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <!-- 2. Device Features -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="wallet-action-card wallet-card-info pa-4 rounded-lg" Elevation="2" @onclick='() => NavManager.NavigateTo("/device-features")'>
+                <div class="d-flex align-center gap-3 mb-3">
+                    <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.Sensors" />
+                    </MudAvatar>
+                    <div>
+                        <MudText Typo="Typo.h6" Class="wallet-card-title">Device Sensors</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Hardware Integration</MudText>
+                    </div>
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+                    Access geolocation, camera, flashlight, vibration, and connectivity seamlessly on Web & MAUI.
+                </MudText>
+                <div class="d-flex align-center gap-1 text-info">
+                    <MudText Typo="Typo.caption" Class="font-weight-bold">Test Hardware</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <!-- 3. Component Showcase -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="wallet-action-card wallet-card-warning pa-4 rounded-lg" Elevation="2" @onclick='() => NavManager.NavigateTo("/componentsdemo")'>
+                <div class="d-flex align-center gap-3 mb-3">
+                    <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.Widgets" />
+                    </MudAvatar>
+                    <div>
+                        <MudText Typo="Typo.h6" Class="wallet-card-title">Showcase</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">UI Demo Gallery</MudText>
+                    </div>
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+                    Explore MudBlazor charts, OpenStreetMap leaflet, AI Markdown exports, and drawer tools.
+                </MudText>
+                <div class="d-flex align-center gap-1 text-warning">
+                    <MudText Typo="Typo.caption" Class="font-weight-bold">Open Demos</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <!-- 4. Backup & Maintenance -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="wallet-action-card wallet-card-success pa-4 rounded-lg" Elevation="2" @onclick='() => NavManager.NavigateTo("/backup-restore")'>
+                <div class="d-flex align-center gap-3 mb-3">
+                    <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.SettingsBackupRestore" />
+                    </MudAvatar>
+                    <div>
+                        <MudText Typo="Typo.h6" Class="wallet-card-title">Data Backup</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Disaster Recovery</MudText>
+                    </div>
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+                    ZIP archive streaming, SHA256 integrity check, adaptive schema introspection, and full wipe-restore.
+                </MudText>
+                <div class="d-flex align-center gap-1 text-success">
+                    <MudText Typo="Typo.caption" Class="font-weight-bold">Manage Backups</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Interactive Architecture & Performance Explorer -->
     <MudGrid>
         <MudItem xs="12" md="8">
             <MudCard Outlined="true" Class="pa-2">
                 <MudCardContent>
                     <div class="d-flex align-center gap-2 mb-4">
                         <MudIcon Icon="@Icons.Material.Filled.Explore" Color="Color.Primary" Size="Size.Medium" />
-                        <MudText Typo="Typo.h5" Class="font-weight-bold">Feature Explorer</MudText>
+                        <MudText Typo="Typo.h5" Class="font-weight-bold">Architecture Explorer</MudText>
                     </div>
-                    
-                    <MudTabs Elevation="0" Rounded="true" Centered="false" Color="Color.Primary" ActivePanelIndexChanged="OnTabChanged">
+
+                    <MudTabs Elevation="0" Rounded="true" Centered="false" Color="Color.Primary">
                         <!-- Tab 1: .NET 10 Core & C# 14 -->
                         <MudTabPanel Text="Core & C# 14" Icon="@Icons.Material.Outlined.Terminal">
                             <div class="pt-4">
                                 <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Long-Term Support (LTS) & Language Refinements</MudText>
                                 <MudText Typo="Typo.body2" Class="mb-4">
-                                    .NET 10 is the recommended LTS release, supported until 2028. Coupled with C# 14, it introduces optimizations that streamline codebase complexity and runtime efficiency.
+                                    .NET 10 is the LTS release supported through 2028. Coupled with C# 14, it introduces field-backed properties (`field` keyword) and zero-allocation stack allocation optimizations.
                                 </MudText>
-                                
+
                                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
-                                    C# 14 brings features like field-backed properties (`field` keyword) to simplify automatic properties without boilerplate backend storage, and improved collection initializers.
+                                    Adaptive schema migration handles legacy backup JSON archives seamlessly across breaking model shifts without requiring database downgrades.
                                 </MudAlert>
 
-                                <MudText Typo="Typo.body2" Class="font-weight-bold mb-1">C# 14 Field-Backed Properties (Proposed/Supported syntax):</MudText>
-                                <pre class="code-box"><code>public string DisplayName
+                                <MudText Typo="Typo.body2" Class="font-weight-bold mb-1">C# 14 Field-Backed Properties syntax:</MudText>
+                                <pre class="code-box"><code>public string CustomerName
 {
     get => field;
     set => field = value?.Trim() ?? throw new ArgumentNullException();
@@ -138,20 +307,20 @@
                         </MudTabPanel>
 
                         <!-- Tab 2: Blazor HybridWebView & Interop -->
-                        <MudTabPanel Text="Blazor Hybrid & MAUI" Icon="@Icons.Material.Outlined.Phonelink">
+                        <MudTabPanel Text="Hybrid Interop" Icon="@Icons.Material.Outlined.Phonelink">
                             <div class="pt-4">
-                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Advanced Native Device Integration</MudText>
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Host-Agnostic Device Services</MudText>
                                 <MudText Typo="Typo.body2" Class="mb-4">
-                                    .NET 10 upgrades the .NET MAUI / Blazor Hybrid interop suite, offering robust, direct APIs to communicate between native device platforms and web pages.
+                                    Unified abstraction contracts allow Blazor components to operate indistinguishably between Browser and MAUI runtimes.
                                 </MudText>
-                                
+
                                 <MudGrid Class="mb-2">
                                     <MudItem xs="12" sm="6">
                                         <div class="d-flex align-start gap-2 mb-3">
                                             <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Color="Color.Secondary" Size="Size.Small" />
                                             <div>
                                                 <MudText Typo="Typo.body2" Class="font-weight-bold">Two-Way JS Interop</MudText>
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Invoke JavaScript asynchronously directly from native contexts using `HybridWebView` and wait for execution results.</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Invoke native APIs from JavaScript or vice-versa with seamless fallback to browser HTML5 APIs.</MudText>
                                             </div>
                                         </div>
                                     </MudItem>
@@ -159,26 +328,8 @@
                                         <div class="d-flex align-start gap-2 mb-3">
                                             <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Secondary" Size="Size.Small" />
                                             <div>
-                                                <MudText Typo="Typo.body2" Class="font-weight-bold">Request Interception</MudText>
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Easily intercept and handle internal Web requests within your hybrid container for added security and local asset loading.</MudText>
-                                            </div>
-                                        </div>
-                                    </MudItem>
-                                    <MudItem xs="12" sm="6">
-                                        <div class="d-flex align-start gap-2 mb-3">
-                                            <MudIcon Icon="@Icons.Material.Filled.Layers" Color="Color.Secondary" Size="Size.Small" />
-                                            <div>
-                                                <MudText Typo="Typo.body2" Class="font-weight-bold">Modular Workloads</MudText>
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">MAUI features ship as decoupled NuGet packages and workloads, enabling faster updates and smaller runtime sizes.</MudText>
-                                            </div>
-                                        </div>
-                                    </MudItem>
-                                    <MudItem xs="12" sm="6">
-                                        <div class="d-flex align-start gap-2 mb-3">
-                                            <MudIcon Icon="@Icons.Material.Filled.VideoLabel" Color="Color.Secondary" Size="Size.Small" />
-                                            <div>
-                                                <MudText Typo="Typo.body2" Class="font-weight-bold">Upgraded MediaPicker</MudText>
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Native media selection supports multi-file choices and automatic image compression out of the box.</MudText>
+                                                <MudText Typo="Typo.body2" Class="font-weight-bold">Silent Delta-Sync</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">SignalR backpressure coordinator dispatches instant entity updates without reload lag.</MudText>
                                             </div>
                                         </div>
                                     </MudItem>
@@ -186,52 +337,13 @@
                             </div>
                         </MudTabPanel>
 
-                        <!-- Tab 3: Blazor Web Capabilities -->
-                        <MudTabPanel Text="Web Capabilities" Icon="@Icons.Material.Outlined.Web">
+                        <!-- Tab 3: Security & Storage -->
+                        <MudTabPanel Text="Security & DR" Icon="@Icons.Material.Outlined.Security">
                             <div class="pt-4">
-                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Unified State, Routing & Reconnection</MudText>
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Disaster Recovery & Offline Storage</MudText>
                                 <MudText Typo="Typo.body2" Class="mb-3">
-                                    Blazor in .NET 10 emphasizes developer lifecycle quality, security compliance, and static resource delivery optimization.
+                                    SQLite with optional SQLCipher encryption on edge devices paired with server SQL Server / PostgreSQL. Full data backup exports can be executed and inspected with cryptographic verification.
                                 </MudText>
-                                
-                                <ul style="padding-left: 1.5rem; margin-bottom: 1rem;">
-                                    <li class="mb-2">
-                                        <b>`MapStaticAssets`</b>: The unified convention introduced in .NET 9 and refined in .NET 10 handles automatic asset compression (Brotli/Gzip) and cache fingerprinting for instant loading.
-                                    </li>
-                                    <li class="mb-2">
-                                        <b>Customizable Reconnection Modal</b>: Easily override the WebSocket reconnect UI (`ReconnectModal`) for Blazor Server workloads, fully supporting Content Security Policy (CSP).
-                                    </li>
-                                    <li class="mb-2">
-                                        <b>HybridCache Abstraction</b>: Modern high-performance hybrid (memory + distributed) caching that prevents L2 cache stampedes and simplifies application caching strategies.
-                                    </li>
-                                </ul>
-                            </div>
-                        </MudTabPanel>
-
-                        <!-- Tab 4: AI & Intelligent Apps -->
-                        <MudTabPanel Text="AI Readiness" Icon="@Icons.Material.Outlined.Psychology">
-                            <div class="pt-4">
-                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Intelligent Application Architecture</MudText>
-                                <MudText Typo="Typo.body2" Class="mb-4">
-                                    With .NET 10, the platform reaches full maturity for artificial intelligence integration through standardized abstractions.
-                                </MudText>
-
-                                <div class="d-flex flex-column gap-3 mb-4">
-                                    <div class="d-flex align-start gap-2">
-                                        <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Color="Color.Info" Size="Size.Small" />
-                                        <div>
-                                            <MudText Typo="Typo.body2" Class="font-weight-bold">Microsoft.Extensions.AI</MudText>
-                                            <MudText Typo="Typo.caption" Color="Color.Secondary">Unified C# interface for interacting with large language models, embedders, and semantic search engines, regardless of provider.</MudText>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex align-start gap-2">
-                                        <MudIcon Icon="@Icons.Material.Filled.Memory" Color="Color.Info" Size="Size.Small" />
-                                        <div>
-                                            <MudText Typo="Typo.body2" Class="font-weight-bold">Local Model Support</MudText>
-                                            <MudText Typo="Typo.caption" Color="Color.Secondary">Run open source LLMs locally via Ollama or ONNX Runtime directly from your .NET applications with zero cloud dependency.</MudText>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </MudTabPanel>
                     </MudTabs>
@@ -314,118 +426,6 @@
             </MudCard>
         </MudItem>
     </MudGrid>
-
-    <MudDivider Class="my-8" />
-
-    <!-- MudBlazor Spotlight Section -->
-    <div class="d-flex align-center gap-2 mb-4">
-        <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Primary" Size="Size.Medium" />
-        <MudText Typo="Typo.h5" Class="font-weight-bold">MudBlazor Component Library</MudText>
-    </div>
-
-    <MudGrid>
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Class="feature-card" Outlined="true">
-                <MudCardContent>
-                    <MudIcon Icon="@Icons.Material.Filled.Speed" Color="Color.Primary" Size="Size.Medium" Class="mb-2" />
-                    <MudText Typo="Typo.body1" Class="font-weight-bold">Fast & Lightweight</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
-                        Built entirely in C# with minimal external JavaScript references for quick load times and high responsiveness.
-                    </MudText>
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Class="feature-card" Outlined="true">
-                <MudCardContent>
-                    <MudIcon Icon="@Icons.Material.Filled.Palette" Color="Color.Secondary" Size="Size.Medium" Class="mb-2" />
-                    <MudText Typo="Typo.body1" Class="font-weight-bold">Material Design</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
-                        Adheres strictly to Material Design principles, supporting fluid light/dark transitions and dynamic layout themes.
-                    </MudText>
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Class="feature-card" Outlined="true">
-                <MudCardContent>
-                    <MudIcon Icon="@Icons.Material.Filled.Widgets" Color="Color.Info" Size="Size.Medium" Class="mb-2" />
-                    <MudText Typo="Typo.body1" Class="font-weight-bold">Huge Component Grid</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
-                        Offers a comprehensive component catalogue, including complex charts, responsive grids, dialogs, and popovers.
-                    </MudText>
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Class="feature-card" Outlined="true">
-                <MudCardContent>
-                    <MudIcon Icon="@Icons.Material.Filled.Code" Color="Color.Success" Size="Size.Medium" Class="mb-2" />
-                    <MudText Typo="Typo.body1" Class="font-weight-bold">SSR & Static Ready</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
-                        Tailored for modern rendering strategies like static server-side rendering, streaming rendering, and full interactivity.
-                    </MudText>
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-    </MudGrid>
-
-    <MudDivider Class="my-8" />
-
-    <!-- Help & Learning Center -->
-    <MudText Typo="Typo.h5" Class="font-weight-bold mb-4">Official Resources & Documentation</MudText>
-    <MudGrid>
-        <MudItem xs="12" sm="6" md="4">
-            <div class="doc-card pa-4 rounded">
-                <div>
-                    <div class="d-flex align-center gap-2 mb-2">
-                        <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" />
-                        <MudText Typo="Typo.body1" Class="font-weight-bold">Blazor Learn Center</MudText>
-                    </div>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Explore the official documentation on Microsoft Learn covering hosting models, state, and rendering modes.
-                    </MudText>
-                </div>
-                <MudButton Href="https://learn.microsoft.com/en-us/aspnet/core/blazor/?view=aspnetcore-10.0" Target="_blank" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward" Class="mt-4 pa-0 align-self-start">
-                    Read Blazor Docs
-                </MudButton>
-            </div>
-        </MudItem>
-
-        <MudItem xs="12" sm="6" md="4">
-            <div class="doc-card pa-4 rounded">
-                <div>
-                    <div class="d-flex align-center gap-2 mb-2">
-                        <MudIcon Icon="@Icons.Material.Filled.Campaign" Color="Color.Secondary" />
-                        <MudText Typo="Typo.body1" Class="font-weight-bold">ASP.NET Core 10.0</MudText>
-                    </div>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Read the release logs detailing what's new in the web engine, security updates, and performance optimizations.
-                    </MudText>
-                </div>
-                <MudButton Href="https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-10.0" Target="_blank" Variant="Variant.Text" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.ArrowForward" Class="mt-4 pa-0 align-self-start">
-                    Read Release Notes
-                </MudButton>
-            </div>
-        </MudItem>
-
-        <MudItem xs="12" sm="6" md="4">
-            <div class="doc-card pa-4 rounded">
-                <div>
-                    <div class="d-flex align-center gap-2 mb-2">
-                        <MudIcon Icon="@Icons.Material.Filled.ArtTrack" Color="Color.Info" />
-                        <MudText Typo="Typo.body1" Class="font-weight-bold">MudBlazor Component Hub</MudText>
-                    </div>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Browse interactive code playground samples and API descriptions for the complete MudBlazor Material component list.
-                    </MudText>
-                </div>
-                <MudButton Href="https://mudblazor.com/" Target="_blank" Variant="Variant.Text" Color="Color.Info" EndIcon="@Icons.Material.Filled.ArrowForward" Class="mt-4 pa-0 align-self-start">
-                    Explore MudBlazor
-                </MudButton>
-            </div>
-        </MudItem>
-    </MudGrid>
 </MudContainer>
 
 @code {
@@ -436,17 +436,12 @@
     private string _net8Time = "";
     private string _net9Time = "";
     private string _net10Time = "";
-    
+
     private int _net8Percent = 100;
     private int _net9Percent = 100;
     private int _net10Percent = 100;
 
     private string _benchmarkExplanation = "";
-
-    private void OnTabChanged(int index)
-    {
-        // Smooth tab switching interaction callback if needed
-    }
 
     private async Task RunBenchmarkSimulation()
     {
@@ -454,8 +449,7 @@
         _simulationFinished = false;
         StateHasChanged();
 
-        // Simulate workload processing time
-        await Task.Delay(1000);
+        await Task.Delay(800);
 
         if (_selectedBenchmark == "Loop Unrolling")
         {
@@ -479,9 +473,9 @@
             _net9Percent = 66;
             _net10Percent = 25;
 
-            _benchmarkExplanation = "Dynamic devirtualization in the .NET 10 JIT automatically resolves interface method calls to direct method invocations. This enables the compiler to inline methods that were previously blocked by polymorphism.";
+            _benchmarkExplanation = "Dynamic devirtualization in the .NET 10 JIT automatically resolves interface method calls to direct method invocations, enabling aggressive inlining.";
         }
-        else // Memory Allocations (GC)
+        else
         {
             _net8Time = "4.2 KB (18 allocs)";
             _net9Time = "1.8 KB (8 allocs)";
@@ -491,7 +485,7 @@
             _net9Percent = 43;
             _net10Percent = 0;
 
-            _benchmarkExplanation = "Memory allocation tracking in .NET 10 benefits from aggressive stack allocation analysis. Small buffers and temporary arrays are allocated directly to stack memory instead of heap memory, generating zero GC pressure.";
+            _benchmarkExplanation = "Memory allocation tracking in .NET 10 benefits from aggressive stack allocation analysis, generating zero GC pressure for local scopes.";
         }
 
         _isSimulating = false;

@@ -1,0 +1,164 @@
+@using GabsHybridApp.Shared.Models
+@using GabsHybridApp.Shared.Services
+@using MudBlazor
+@inject UserService UserService
+@inject ISnackbar Snackbar
+
+<MudDialog TitleClass="pa-0">
+    <TitleContent>
+        <MudAppBar Elevation="4" Fixed="false">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" OnClick="Cancel" Edge="Edge.Start" Class="d-inline-flex d-sm-none mr-1" aria-label="back" />
+            <MudIcon Icon="@(IsEditMode ? Icons.Material.Filled.AdminPanelSettings : Icons.Material.Filled.PersonAdd)" Class="mr-2 d-none d-sm-inline-flex" />
+            @* Mobile Short Title (xs screen) *@
+            <MudText Typo="Typo.h6" Color="Color.Inherit" Class="d-block d-sm-none text-truncate">
+                @(IsEditMode ? $"Roles: {User?.Username}" : "New User")
+            </MudText>
+            @* Desktop / Tablet Full Title (sm+ screen) *@
+            <MudText Typo="Typo.h6" Color="Color.Inherit" Class="d-none d-sm-block">
+                @(IsEditMode ? $"Manage Roles: {User?.Username}" : "Create New User")
+            </MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="Cancel" Class="d-none d-sm-inline-flex" aria-label="close" />
+        </MudAppBar>
+    </TitleContent>
+    <DialogContent>
+        @if (!IsEditMode)
+        {
+            <MudTextField T="string" @bind-Value="_username" Label="E-mail" Required="true" Variant="Variant.Outlined" Class="mb-4" autocomplete="off" autocorrect="off" spellcheck="false" />
+            <MudPasswordField @bind-Value="_password" Label="Password" Required="true" PasswordMode="true" Variant="Variant.Outlined" IconSize="Size.Medium" Class="mb-4" autocomplete="new-password" />
+            <MudSwitch T="bool" @bind-Value="_isActive" Color="Color.Success" Class="mb-4" Label="Account Active Immediately" />
+        }
+
+        <MudText Typo="Typo.subtitle2" Class="mb-2"><b>Assign Security Roles:</b></MudText>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            @foreach (var role in _availableRoles)
+            {
+                var isSelected = _selectedRoles.Contains(role, StringComparer.OrdinalIgnoreCase);
+                <MudChip T="string"
+                         Style="@(isSelected ? GetRoleChipStyle(role) : "")"
+                         Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                         OnClick="() => ToggleRole(role)"
+                         Selected="@isSelected"
+                         Icon="@(isSelected ? Icons.Material.Filled.Check : GetRoleIcon(role))">
+                    @role.ToUpper()
+                </MudChip>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" OnClick="Submit">Save User</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public UserAccount? User { get; set; }
+
+    private bool IsEditMode => User != null;
+    private string _username = "";
+    private string _password = "";
+    private bool _isActive = true;
+    private HashSet<string> _selectedRoles = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly string[] _availableRoles = new[]
+    {
+        "administrator", "manager", "operator", "supervisor", "auditor", "viewer", "user"
+    };
+
+    protected override void OnInitialized()
+    {
+        if (User != null)
+        {
+            _username = User.Username ?? "";
+            _isActive = User.IsActive;
+            if (!string.IsNullOrWhiteSpace(User.Roles))
+            {
+                var roles = User.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                foreach (var r in roles)
+                {
+                    _selectedRoles.Add(r);
+                }
+            }
+        }
+        else
+        {
+            _selectedRoles.Add("user");
+        }
+    }
+
+    private void ToggleRole(string role)
+    {
+        if (_selectedRoles.Contains(role))
+        {
+            _selectedRoles.Remove(role);
+        }
+        else
+        {
+            _selectedRoles.Add(role);
+        }
+    }
+
+    private string GetRoleChipStyle(string role) => role.Trim().ToLowerInvariant() switch
+    {
+        "administrator" or "admin" => $"background-color: {Colors.Red.Lighten5}; color: {Colors.Red.Darken4}; border: 1px solid {Colors.Red.Lighten2};",
+        "manager"                  => $"background-color: {Colors.DeepPurple.Lighten5}; color: {Colors.DeepPurple.Darken3}; border: 1px solid {Colors.DeepPurple.Lighten2};",
+        "supervisor"               => $"background-color: {Colors.LightBlue.Lighten5}; color: {Colors.LightBlue.Darken4}; border: 1px solid {Colors.LightBlue.Lighten2};",
+        "operator"                 => $"background-color: {Colors.Teal.Lighten5}; color: {Colors.Teal.Darken4}; border: 1px solid {Colors.Teal.Lighten2};",
+        "auditor"                  => $"background-color: {Colors.Amber.Lighten5}; color: {Colors.Amber.Darken4}; border: 1px solid {Colors.Amber.Lighten2};",
+        "viewer" or "viewonly"     => $"background-color: {Colors.BlueGray.Lighten5}; color: {Colors.BlueGray.Darken3}; border: 1px solid {Colors.BlueGray.Lighten2};",
+        _                          => $"background-color: {Colors.Gray.Lighten4}; color: {Colors.Gray.Darken3}; border: 1px solid {Colors.Gray.Lighten1};"
+    };
+
+    private string GetRoleIcon(string role) => role.Trim().ToLowerInvariant() switch
+    {
+        "administrator" or "admin" => Icons.Material.Filled.AdminPanelSettings,
+        "manager"                  => Icons.Material.Filled.Security,
+        "supervisor"               => Icons.Material.Filled.SupervisorAccount,
+        "operator"                 => Icons.Material.Filled.SupportAgent,
+        "auditor"                  => Icons.Material.Filled.FactCheck,
+        "viewer" or "viewonly"     => Icons.Material.Filled.Visibility,
+        _                          => Icons.Material.Filled.Person
+    };
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit()
+    {
+        var rolesString = string.Join(",", _selectedRoles);
+
+        if (IsEditMode && User != null)
+        {
+            bool success = UserService.SetRoles(User.Username!, rolesString);
+            if (success)
+            {
+                Snackbar.Add($"Roles updated for '{User.Username}'", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add("Failed to update user roles.", Severity.Error);
+            }
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))
+            {
+                Snackbar.Add("Login e-mail and password are required.", Severity.Warning);
+                return;
+            }
+
+            var resultId = UserService.Create(_username, _password, rolesString, requiresActivation: !_isActive);
+            if (resultId.HasValue)
+            {
+                Snackbar.Add($"User '{_username}' created successfully!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add("Could not create user. E-mail may already exist or contain invalid characters.", Severity.Error);
+            }
+        }
+    }
+}

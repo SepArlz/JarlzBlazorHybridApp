@@ -1,0 +1,141 @@
+@using GabsHybridApp.Shared.Services
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Forms
+@using System.IO
+@inject UserService UserService
+@inject ISnackbar Snackbar
+
+<MudDialog TitleClass="pa-0">
+    <TitleContent>
+        <MudAppBar Elevation="4" Fixed="false">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" OnClick="Cancel" Edge="Edge.Start" Class="d-inline-flex d-sm-none mr-1" aria-label="back" />
+            <MudIcon Icon="@Icons.Material.Filled.FileUpload" Class="mr-2 d-none d-sm-inline-flex" />
+            @* Mobile Short Title (xs screen) *@
+            <MudText Typo="Typo.h6" Color="Color.Inherit" Class="d-block d-sm-none text-truncate">
+                Import CSV
+            </MudText>
+            @* Desktop / Tablet Full Title (sm+ screen) *@
+            <MudText Typo="Typo.h6" Color="Color.Inherit" Class="d-none d-sm-block">
+                Import Users from CSV
+            </MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="Cancel" Class="d-none d-sm-inline-flex" aria-label="close" />
+        </MudAppBar>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Upload a <b>.csv file</b> or paste CSV data below formatted as: <code>Username, Password, Roles, Active (true/false)</code>
+        </MudText>
+
+        <InputFile id="csvFileInput" OnChange="OnFileSelected" hidden accept=".csv, .txt" />
+        <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" for="csvFileInput" Class="mb-3">
+            Choose CSV File
+        </MudButton>
+
+        <MudTextField T="string" @bind-Value="_csvText" TextChanged="OnCsvTextChanged" Label="Or Paste CSV Content Here" Lines="5" Variant="Variant.Outlined" Placeholder="user1, Password123!, operator, true&#10;user2, Password123!, manager, true" Class="mb-4" />
+
+        @if (_parsedUsers.Count > 0)
+        {
+            <MudText Typo="Typo.subtitle2" Class="mb-2"><b>Parsed Users Preview (@_parsedUsers.Count rows):</b></MudText>
+            <MudTable Items="@_parsedUsers" Dense="true" Hover="true" Striped="true" Elevation="1" Class="mb-3">
+                <HeaderContent>
+                    <MudTh>Username</MudTh>
+                    <MudTh>Roles</MudTh>
+                    <MudTh>Active</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Username"><b>@context.username</b></MudTd>
+                    <MudTd DataLabel="Roles">
+                        @foreach (var r in context.roles.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@r.Trim()</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Active">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.isActive ? Color.Success : Color.Default)">
+                            @(context.isActive ? "Active" : "Inactive")
+                        </MudChip>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Info" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FileUpload" Disabled="@(_parsedUsers.Count == 0)" OnClick="SubmitImport">
+            Import @_parsedUsers.Count Users
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private string _csvText = "";
+    private List<(string username, string password, string roles, bool isActive)> _parsedUsers = new();
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+        try
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024);
+            using var reader = new StreamReader(stream);
+            _csvText = await reader.ReadToEndAsync();
+            ParseCsv();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error reading file: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OnCsvTextChanged(string value)
+    {
+        _csvText = value;
+        ParseCsv();
+    }
+
+    private void ParseCsv()
+    {
+        _parsedUsers.Clear();
+        if (string.IsNullOrWhiteSpace(_csvText)) return;
+
+        var lines = _csvText.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var line in lines)
+        {
+            var parts = line.Split(',');
+            if (parts.Length >= 2)
+            {
+                var uname = parts[0].Trim();
+                var pwd = parts[1].Trim();
+                var roles = parts.Length >= 3 ? parts[2].Trim() : "user";
+                var isActive = parts.Length >= 4 ? bool.TryParse(parts[3].Trim(), out var active) && active : true;
+
+                if (!string.IsNullOrWhiteSpace(uname) && !string.IsNullOrWhiteSpace(pwd))
+                {
+                    _parsedUsers.Add((uname, pwd, roles, isActive));
+                }
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void SubmitImport()
+    {
+        if (_parsedUsers.Count == 0) return;
+
+        int imported = UserService.BatchImportUsers(_parsedUsers);
+        if (imported > 0)
+        {
+            Snackbar.Add($"Successfully imported {imported} user accounts!", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add("No new users imported. Check if usernames already exist.", Severity.Warning);
+        }
+    }
+}

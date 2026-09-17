@@ -1,4 +1,4 @@
-﻿using GabsHybridApp.Shared.Services;
+using GabsHybridApp.Shared.Services;
 
 namespace GabsHybridApp.Maui.Services;
 
@@ -30,7 +30,14 @@ public sealed class MauiNetworkService : INetworkService, IDisposable
 
     private void Apply(NetworkAccess access, IEnumerable<ConnectionProfile> profiles)
     {
-        IsOnline = access is NetworkAccess.Internet or NetworkAccess.ConstrainedInternet;
+        if (DeviceInfo.Platform == DevicePlatform.WinUI)
+        {
+            IsOnline = System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable() || access is not NetworkAccess.None;
+        }
+        else
+        {
+            IsOnline = access is not NetworkAccess.None;
+        }
 
         bool wifi = false, cell = false;
         foreach (var p in profiles)

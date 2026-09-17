@@ -1,0 +1,93 @@
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudGrid Class="mt-2">
+    <MudItem xs="12" md="4">
+        <MudCard Outlined="true" Class="pa-4 rounded-lg" Style="height: 100%;">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.Web" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">Dialog Showcase</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Test responsive dialog variants</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudStack Spacing="2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Message" OnClick="OpenMessageBox">
+                        Open Message Box
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="OpenConfirmDialog">
+                        Confirm Action Dialog
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" FullWidth="true" StartIcon="@Icons.Material.Filled.Fullscreen" OnClick="OpenFullscreenDialog">
+                        Fullscreen Dialog (Mobile Auto)
+                    </MudButton>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="8">
+        <MudCard Outlined="true" Class="pa-6 rounded-lg mud-background-grey" Style="height: 100%;">
+            <MudText Typo="Typo.h5" Class="font-weight-bold mb-3" Color="Color.Primary">MudDialog & Scoped AppBars</MudText>
+            <MudText Typo="Typo.body1" Class="mb-3">
+                In this template, dialogs are optimized for mobile viewports (automatic fullscreen on &le; 600px with zero edge clipping) and styled with scoped AppBar hero gradients.
+            </MudText>
+            <MudList T="string" ReadOnly="true" Dense="true" Class="pa-0">
+                <MudListItem Icon="@Icons.Material.Filled.CheckCircleOutline" IconColor="Color.Success">
+                    <strong>Zero Global Collision:</strong> Dialog AppBars use semantic colors (Error, Primary, Info, Success) without polluting the root layout navigation.
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.CheckCircleOutline" IconColor="Color.Success">
+                    <strong>Mobile Fullscreen Override:</strong> Seamlessly stretches to <code>100dvh</code> on small phones while remaining compact and centered for <code>MudMessageBox</code>.
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.CheckCircleOutline" IconColor="Color.Success">
+                    <strong>Glassmorphic Snackbars:</strong> Notifications appear with blur backdrops and severity drop-glows.
+                </MudListItem>
+            </MudList>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private async Task OpenMessageBox()
+    {
+        bool? result = await DialogService.ShowMessageBoxAsync(
+            "System Verification",
+            "Are you ready to synchronize local database changes with central SignalR hubs?",
+            yesText: "Synchronize",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            Snackbar.Add("Synchronization task started.", Severity.Success);
+        }
+    }
+
+    private async Task OpenConfirmDialog()
+    {
+        bool? result = await DialogService.ShowMessageBoxAsync(
+            "Execute Task",
+            "This operation will validate schema models against current EF Core database definitions.",
+            yesText: "Proceed",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            Snackbar.Add("Schema validation passed with 0 mismatches.", Severity.Info);
+        }
+    }
+
+    private async Task OpenFullscreenDialog()
+    {
+        var options = new DialogOptions { FullScreen = true, CloseButton = true };
+        await DialogService.ShowMessageBoxAsync(
+            "Full Viewport Dialog",
+            "This dialog demonstrates full viewport mode on mobile and tablet devices with high-contrast headers.",
+            yesText: "Got It",
+            options: options);
+    }
+}

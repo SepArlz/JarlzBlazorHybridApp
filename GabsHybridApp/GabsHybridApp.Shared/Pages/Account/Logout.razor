@@ -1,4 +1,4 @@
-﻿@page "/account/logout"
+@page "/account/logout"
 @layout Layout.NullLayout
 @attribute [AllowAnonymous]
 
@@ -11,9 +11,9 @@
 
 @if (Caps.RequiresFullReloadAfterAuth)
 {
-    <!-- WEB: post to the minimal-api endpoint that signs out & redirects -->
+    @* WEB: post to the minimal-api endpoint that signs out & redirects *@
     <form method="post" action="/_internal/logout"><noscript><button type="submit">Sign out</button></noscript></form>
-    <script>window.onload = () => document.forms[0]?.submit();</script>
+    <script>document.forms[0]?.submit();</script>
 }
 
 @code {

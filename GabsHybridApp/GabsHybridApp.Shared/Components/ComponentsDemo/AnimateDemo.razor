@@ -1,0 +1,104 @@
+@using MudBlazor
+
+<style>
+    .animate-box {
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .anim-fade {
+        animation: animFadeIn 0.8s ease-in-out;
+    }
+    .anim-scale {
+        animation: animScaleUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .anim-pulse {
+        animation: animPulseBeat 1.2s infinite;
+    }
+    .anim-slide {
+        animation: animSlideIn 0.7s ease-out;
+    }
+
+    @@keyframes animFadeIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @@keyframes animScaleUp {
+        0% { transform: scale(0.85); opacity: 0.5; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    @@keyframes animPulseBeat {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    @@keyframes animSlideIn {
+        from { transform: translateX(-30px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+</style>
+
+<MudGrid Class="mt-2">
+    <MudItem xs="12" md="4">
+        <MudCard Outlined="true" Class="pa-4 rounded-lg">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.Animation" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">Animation Controls</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Trigger interactive transitions</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudStack Spacing="3">
+                    <MudSelect T="string" Label="Animation Effect" @bind-Value="_currentAnimation" Variant="Variant.Outlined" Dense="true">
+                        <MudSelectItem Value="@("anim-fade")">Fade &amp; Rise</MudSelectItem>
+                        <MudSelectItem Value="@("anim-scale")">Elastic Scale</MudSelectItem>
+                        <MudSelectItem Value="@("anim-slide")">Slide Left</MudSelectItem>
+                        <MudSelectItem Value="@("anim-pulse")">Continuous Pulse</MudSelectItem>
+                    </MudSelect>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="Replay">
+                        Replay Transition
+                    </MudButton>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="8">
+        <MudCard Outlined="true" Class="pa-6 rounded-lg d-flex flex-column align-center justify-center" Style="min-height: 380px;">
+            @if (_renderKey)
+            {
+                <div class="animate-box @_currentAnimation">
+                    <MudPaper Class="pa-8 d-flex flex-column align-center text-center primary-hero-paper rounded-xl" Elevation="4" Style="max-width: 440px;">
+                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large" Class="mb-4">
+                            <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Large" />
+                        </MudAvatar>
+                        <MudText Typo="Typo.h5" Class="font-weight-bold mb-2">Micro-Interaction Suite</MudText>
+                        <MudText Typo="Typo.body2" Style="opacity: 0.9;" Class="mb-4">
+                            High-performance hardware-accelerated animations for dashboards, action cards, and mobile slide-overs.
+                        </MudText>
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">
+                            60 FPS Hardware Accelerated
+                        </MudChip>
+                    </MudPaper>
+                </div>
+            }
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _currentAnimation = "anim-fade";
+    private bool _renderKey = true;
+
+    private async Task Replay()
+    {
+        _renderKey = false;
+        StateHasChanged();
+        await Task.Delay(50);
+        _renderKey = true;
+        StateHasChanged();
+    }
+}

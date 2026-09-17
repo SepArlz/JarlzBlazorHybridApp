@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui;
 using GabsHybridApp.Maui.Extensions;
 using GabsHybridApp.Maui.Services;
 using GabsHybridApp.Shared;
@@ -30,7 +30,8 @@ public static class MauiProgram
         // Add device-specific services used by the GabsHybridApp.Shared project
         builder.Services.AddSingleton<IFormFactor, FormFactor>();
         builder.Services.AddScoped<IHostCapabilities, MauiHostCapabilities>();
-        builder.UseStatusBarTheme("#0d6efd", lightContent: true);
+        builder.Services.AddScoped<IAppThemeService, MauiAppThemeService>();
+        builder.UseStatusBarTheme("#2979ff", lightContent: true);
 
         builder.Services.AddMauiBlazorWebView();
 
@@ -42,6 +43,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<ICameraService, MauiCameraService>();
         builder.Services.AddSingleton<IFlashlightService, MauiFlashlightService>();
         builder.Services.AddSingleton<INetworkService, MauiNetworkService>();
+        builder.Services.AddSingleton<IDeviceIdProvider, MauiDeviceIdProvider>();
+        builder.Services.AddSingleton<IBackupStorageProvider, MauiBackupStorageProvider>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
@@ -51,7 +54,10 @@ public static class MauiProgram
         var app = builder.Build();
 
         // ✨ One-liner: migrate DB (and optionally seed) on startup; WAL enabled for mobile.
-        app.MigrateDb<HybridAppDbContext>(enableWal: true);
+        app.MigrateDb<HybridAppDbContext>(enableWal: true, seed: db =>
+        {
+            db.SeedOrderData();
+        });
 
         return app;
     }

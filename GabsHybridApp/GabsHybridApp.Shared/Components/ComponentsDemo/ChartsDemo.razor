@@ -1,0 +1,88 @@
+@using MudBlazor
+
+<MudGrid Class="mt-2">
+    <!-- Donut Chart: Revenue Breakdown -->
+    <MudItem xs="12" md="6">
+        <MudCard Outlined="true" Class="pa-4 rounded-lg">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.PieChart" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">Revenue by Category</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Q3 Sales Distribution</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="d-flex justify-center">
+                <MudChart T="double" ChartType="ChartType.Donut" ChartSeries="@_donutSeries" ChartLabels="@_donutLabels" Width="260px" Height="260px" />
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <!-- Bar Chart: Monthly Orders -->
+    <MudItem xs="12" md="6">
+        <MudCard Outlined="true" Class="pa-4 rounded-lg">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.BarChart" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">Monthly Orders &amp; Fulfillment</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">2026 Volume Trend</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudChart T="double" ChartType="ChartType.Bar" ChartSeries="@_barSeries" ChartLabels="@_xAxisLabels" Width="100%" Height="260px" />
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <!-- Line Chart: System Performance -->
+    <MudItem xs="12">
+        <MudCard Outlined="true" Class="pa-4 rounded-lg">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.ShowChart" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">SignalR Circuit Latency &amp; Sync Throughput (ms)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Real-Time Telemetry Trend</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudChart T="double" ChartType="ChartType.Line" ChartSeries="@_lineSeries" ChartLabels="@_timeLabels" Width="100%" Height="280px" />
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private List<ChartSeries<double>> _donutSeries = new()
+    {
+        new ChartSeries<double> { Name = "Beverages", Data = new double[] { 42 } },
+        new ChartSeries<double> { Name = "Detergent & Home", Data = new double[] { 28 } },
+        new ChartSeries<double> { Name = "Personal Care", Data = new double[] { 18 } },
+        new ChartSeries<double> { Name = "Snacks", Data = new double[] { 12 } }
+    };
+    private string[] _donutLabels = { "Beverages", "Detergent & Home", "Personal Care", "Snacks" };
+
+    private List<ChartSeries<double>> _barSeries = new()
+    {
+        new ChartSeries<double> { Name = "Orders Received", Data = new double[] { 65, 78, 92, 115, 140, 168 } },
+        new ChartSeries<double> { Name = "Fulfilled / Delivered", Data = new double[] { 60, 75, 88, 110, 134, 162 } }
+    };
+    private string[] _xAxisLabels = { "Apr", "May", "Jun", "Jul", "Aug", "Sep" };
+
+    private List<ChartSeries<double>> _lineSeries = new()
+    {
+        new ChartSeries<double> { Name = "Hybrid Circuit (ms)", Data = new double[] { 14, 12, 18, 15, 11, 9, 13, 10 } },
+        new ChartSeries<double> { Name = "Background Delta Sync (ms)", Data = new double[] { 32, 28, 25, 29, 22, 20, 24, 19 } }
+    };
+    private string[] _timeLabels = { "00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00" };
+}

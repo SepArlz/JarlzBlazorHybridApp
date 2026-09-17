@@ -1,4 +1,4 @@
-﻿using GabsHybridApp.Shared.Services;
+using GabsHybridApp.Shared.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -17,6 +17,12 @@ public class ServerCookieAuthService(IHttpContextAccessor http, UserService user
         var u = users.Authenticate(username, password);
         if (u is null) return false;
 
+        var context = http.HttpContext;
+        if (context == null || context.Response.HasStarted)
+        {
+            return false;
+        }
+
         var claims = new List<Claim>
         {
             new(ClaimTypes.Name, username),
@@ -28,11 +34,17 @@ public class ServerCookieAuthService(IHttpContextAccessor http, UserService user
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         _user = new ClaimsPrincipal(identity);
 
-        await http.HttpContext!.SignInAsync(
+        await context.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             _user
         );
         return true;
+    }
+
+    public Task<bool> SignInStationModeAsync(string deviceId, string pin)
+    {
+        // Station Mode is intended for MAUI mobile/tablets; web sessions use standard cookie authentication
+        return Task.FromResult(false);
     }
 
     public async Task SignOutAsync()

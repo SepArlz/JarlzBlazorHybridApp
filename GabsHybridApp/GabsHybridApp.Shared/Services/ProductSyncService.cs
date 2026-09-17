@@ -1,4 +1,4 @@
-﻿using GabsHybridApp.Shared.Data;
+using GabsHybridApp.Shared.Data;
 using GabsHybridApp.Shared.Models;
 using GabsHybridApp.Shared.States;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +31,6 @@ public sealed class ProductSyncService
     /// </summary>
     public async Task<int> SyncAsync(string username, CancellationToken ct = default)
     {
-        throw new Exception();
         // Only perform sync on MAUI/WinUI (not on Web host)
         if (string.Equals(_formFactor.GetFormFactor(), "Web", StringComparison.OrdinalIgnoreCase))
             return 0;

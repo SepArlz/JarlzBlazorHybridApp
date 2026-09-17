@@ -1,0 +1,198 @@
+@using GabsHybridApp.Shared.Services
+@inject IAppUpdateService UpdateService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.SystemUpdate" Color="Color.Primary" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">Application Update</MudText>
+        </div>
+    </TitleContent>
+
+    <DialogContent>
+        <div class="d-flex flex-column gap-3 my-2">
+            @* Version Comparison Banner *@
+            <div class="d-flex align-center justify-center gap-2 py-1">
+                <MudChip T="string" Color="Color.Default" Variant="Variant.Outlined" Size="Size.Small">
+                    Current: v@(UpdateInfo.CurrentVersion)
+                </MudChip>
+                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Color="Color.Secondary" />
+                <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.NewReleases">
+                    Latest: v@(UpdateInfo.LatestVersion)
+                </MudChip>
+                @if (!string.IsNullOrEmpty(UpdateInfo.FormattedSize))
+                {
+                    <MudChip T="string" Color="Color.Info" Variant="Variant.Text" Size="Size.Small" Icon="@Icons.Material.Filled.Download">
+                        @UpdateInfo.FormattedSize
+                    </MudChip>
+                }
+            </div>
+
+            @if (UpdateInfo.IsMandatory)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="my-1">
+                    This is a required system update. Please upgrade to continue using the application.
+                </MudAlert>
+            }
+
+            @* Release Notes Card *@
+            @if (!string.IsNullOrWhiteSpace(UpdateInfo.ReleaseNotes))
+            {
+                <MudPaper Elevation="0" Outlined="true" Class="pa-3 rounded">
+                    <MudText Typo="Typo.caption" Class="font-weight-bold mud-text-secondary">WHAT'S NEW</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1" Style="white-space: pre-line;">
+                        @UpdateInfo.ReleaseNotes
+                    </MudText>
+                </MudPaper>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary text-center">
+                    A new version is ready to install. This update contains performance improvements and stability fixes.
+                </MudText>
+            }
+
+            @* Progress Indicator during Download *@
+            @if (_isDownloading)
+            {
+                <div class="d-flex flex-column gap-1 my-2">
+                    <div class="d-flex justify-space-between align-center">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Downloading update package...</MudText>
+                        <MudText Typo="Typo.caption" Class="font-weight-bold">@($"{_downloadPercent:F0}%")</MudText>
+                    </div>
+                    <MudProgressLinear Color="Color.Primary" Value="@_downloadPercent" Rounded="true" Size="Size.Medium" />
+                </div>
+            }
+
+            @if (_isInstalling)
+            {
+                <div class="d-flex align-center justify-center gap-2 my-2">
+                    <MudProgressCircular Color="Color.Success" Size="Size.Small" Indeterminate="true" />
+                    <MudText Typo="Typo.body2" Color="Color.Success" Class="font-weight-bold">Launching installer...</MudText>
+                </div>
+            }
+
+            @* Error Banner *@
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="my-1">
+                    @_errorMessage
+                </MudAlert>
+            }
+        </div>
+    </DialogContent>
+
+    <DialogActions>
+        @if (!UpdateInfo.IsMandatory && !_isDownloading && !_isInstalling)
+        {
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Text"
+                       Color="Color.Default"
+                       OnClick="Cancel">
+                Later
+            </MudButton>
+        }
+
+        <MudSpacer />
+
+        @if (!_isDownloading && !_isInstalling)
+        {
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Download"
+                       OnClick="StartDownloadAndInstall">
+                Download &amp; Install
+            </MudButton>
+        }
+        else if (_isDownloading)
+        {
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Text"
+                       Color="Color.Error"
+                       OnClick="CancelDownload">
+                Cancel
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public UpdateCheckResult UpdateInfo { get; set; } = new();
+
+    private bool _isDownloading = false;
+    private bool _isInstalling = false;
+    private double _downloadPercent = 0.0;
+    private string? _errorMessage;
+    private CancellationTokenSource? _downloadCts;
+
+    private async Task StartDownloadAndInstall()
+    {
+        _isDownloading = true;
+        _errorMessage = null;
+        _downloadPercent = 0.0;
+        _downloadCts = new CancellationTokenSource();
+
+        try
+        {
+            var progress = new Progress<double>(percent =>
+            {
+                _downloadPercent = percent;
+                InvokeAsync(StateHasChanged);
+            });
+
+            var localPath = await UpdateService.DownloadUpdateAsync(UpdateInfo, progress, _downloadCts.Token);
+
+            _isDownloading = false;
+            _isInstalling = true;
+            await InvokeAsync(StateHasChanged);
+
+            bool success = await UpdateService.InstallUpdateAsync(localPath);
+            if (!success)
+            {
+                _isInstalling = false;
+                _errorMessage = "Installation failed or was cancelled by user.";
+            }
+            else
+            {
+                MudDialog?.Close(DialogResult.Ok(true));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            _isDownloading = false;
+            _isInstalling = false;
+            _errorMessage = "Download was cancelled.";
+        }
+        catch (Exception ex)
+        {
+            _isDownloading = false;
+            _isInstalling = false;
+            _errorMessage = $"Update failed: {ex.Message}";
+        }
+        finally
+        {
+            _downloadCts?.Dispose();
+            _downloadCts = null;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void CancelDownload()
+    {
+        _downloadCts?.Cancel();
+    }
+
+    private void Cancel()
+    {
+        if (!UpdateInfo.IsMandatory)
+        {
+            MudDialog?.Cancel();
+        }
+    }
+}

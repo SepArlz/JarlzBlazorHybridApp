@@ -1,0 +1,404 @@
+@page "/backup-restore"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@attribute [Authorize]
+@using GabsHybridApp.Shared.Models
+@using GabsHybridApp.Shared.Services
+@using GabsHybridApp.Shared.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Logging
+@using MudBlazor
+@inject IFormFactor FormFactor
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDataBackupService BackupService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILogger<BackupRestoreManagement> Logger
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Database Backup &amp; Recovery</PageTitle>
+
+<!-- Top Hero Header -->
+<MudPaper Elevation="3" Class="pa-4 mb-6 rounded-lg primary-hero-paper">
+    <div class="d-flex justify-space-between align-center flex-wrap gap-3">
+        <div class="d-flex align-center gap-3">
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                <MudIcon Icon="@Icons.Material.Filled.SettingsBackupRestore" />
+            </MudAvatar>
+            <div>
+                <MudText Typo="Typo.h5" Color="Color.Primary"><b>Database Backup &amp; Disaster Recovery</b></MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    Comprehensive backup archive generation, inspection, and two-tier adaptive restoration for Web &amp; Mobile devices.
+                </MudText>
+            </div>
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@GetDeviceIcon(FormFactor.GetFormFactor())">
+                Current Device: <b>@FormFactor.GetFormFactor()</b> (@FormFactor.GetPlatform())
+            </MudChip>
+        </div>
+    </div>
+</MudPaper>
+
+<!-- Actions Row: Generate Backup & Restore Cards -->
+<div class="d-flex flex-wrap gap-4 mb-4">
+    <!-- Generate Backup Card -->
+    <MudPaper Elevation="1" Outlined="true" Class="pa-4 flex-grow-1 rounded-lg">
+        <div class="d-flex align-center gap-2 mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.Archive" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Generate Database Backup</MudText>
+        </div>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mb-3">
+            Create a full compressed archive of products, orders, device registrations, and system configurations.
+        </MudText>
+        <div class="d-flex align-center gap-2 flex-wrap">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                       OnClick="CreateNewBackupAsync"
+                       Disabled="@_isOperating">
+                @(_isOperating && _operationLabel.Contains("Exporting") ? "Generating Backup..." : "Generate New Backup (.zip)")
+            </MudButton>
+
+            @if (_backupHistory.Any() && _isWeb)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Info"
+                           StartIcon="@Icons.Material.Filled.Download"
+                           Href="/download-db"
+                           Target="_blank">
+                    Download Latest Backup
+                </MudButton>
+            }
+        </div>
+    </MudPaper>
+
+    <!-- Upload & Restore Card -->
+    <MudPaper Elevation="1" Outlined="true" Class="pa-4 flex-grow-1 rounded-lg">
+        <div class="d-flex align-center gap-2 mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.RestorePage" Color="Color.Error" />
+            <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Restore Database from Archive</MudText>
+        </div>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mb-3">
+            Inspect, validate schema compatibility, and execute wipe-and-replace recovery.
+        </MudText>
+
+        <InputFile id="backupFileInput" OnChange="OnArchiveFileSelected" accept=".zip" style="display: none;" />
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.FileUpload"
+                   OnClick="TriggerFileSelect"
+                   Disabled="@_isOperating">
+            Upload &amp; Restore Archive (.zip)
+        </MudButton>
+    </MudPaper>
+</div>
+
+<!-- Operation Progress Status -->
+@if (_isOperating)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-4 rounded-lg">
+        <div class="d-flex align-center gap-3">
+            <MudProgressCircular Color="Color.Inherit" Indeterminate="true" Size="Size.Small" />
+            <div>
+                <MudText Typo="Typo.subtitle2" Class="font-weight-bold">@_operationLabel</MudText>
+                <MudText Typo="Typo.caption">Please wait while the system processes your request...</MudText>
+            </div>
+        </div>
+    </MudAlert>
+}
+
+<!-- Backup Archive History Table -->
+<MudTable Items="_backupHistory" Loading="_isLoading" Elevation="1" Class="rounded-lg" Hover="true" Dense="true">
+    <ToolBarContent>
+        <MudIcon Icon="@Icons.Material.Filled.History" Class="mr-2" />
+        <MudText Typo="Typo.h6">Backup Catalog &amp; Audit History</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="LoadDataAsync" />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Archive Name</MudTh>
+        <MudTh>Origin Platform</MudTh>
+        <MudTh>Created Date</MudTh>
+        <MudTh>Total Records</MudTh>
+        <MudTh>Size</MudTh>
+        <MudTh>Checksum (SHA-256)</MudTh>
+        <MudTh Style="text-align: right;">Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Archive Name">
+            <div class="d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.FolderZip" Color="Color.Primary" Size="Size.Small" />
+                <div>
+                    <span class="font-weight-bold">@context.FileName</span>
+                    @if (context.BackupType == "PRE_RESTORE_SAFETY")
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Text" Class="pa-0 ma-0 ml-1">Safety Snapshot</MudChip>
+                    }
+                </div>
+            </div>
+        </MudTd>
+        <MudTd DataLabel="Origin Platform">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default" Icon="@GetDeviceIcon(context.SourceFormFactor)">
+                @context.SourceFormFactor
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Created Date">
+            @context.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+        </MudTd>
+        <MudTd DataLabel="Total Records">
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">@context.TotalRecordsCount records</MudChip>
+        </MudTd>
+        <MudTd DataLabel="Size">
+            @FormatBytes(context.FileSizeBytes)
+        </MudTd>
+        <MudTd DataLabel="Checksum">
+            <span style="font-family: monospace; font-size: 0.75rem;">
+                @(context.Sha256Checksum?[..Math.Min(12, context.Sha256Checksum.Length)] ?? "N/A")...
+            </span>
+        </MudTd>
+        <MudTd DataLabel="Actions" Style="text-align: right;">
+            <MudButtonGroup Size="Size.Small" Variant="Variant.Text">
+                <MudTooltip Text="Restore from Stored Backup">
+                    <MudIconButton Icon="@Icons.Material.Filled.RestorePage" Color="Color.Error" OnClick="@(() => RestoreStoredBackupAsync(context))" Disabled="_isOperating" />
+                </MudTooltip>
+                <MudTooltip Text="Delete Backup File">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="@(() => DeleteBackupAsync(context))" Disabled="_isOperating" />
+                </MudTooltip>
+            </MudButtonGroup>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <div class="d-flex flex-column align-center justify-center py-8 text-secondary">
+            <MudIcon Icon="@Icons.Material.Filled.FolderZip" Size="Size.Large" Class="mb-2" />
+            <MudText Typo="Typo.subtitle1">No backup archives found.</MudText>
+            <MudText Typo="Typo.caption">Generate a new backup to populate catalog records.</MudText>
+        </div>
+    </NoRecordsContent>
+</MudTable>
+
+@code {
+    private List<BackupRecord> _backupHistory = new();
+    private bool _isLoading;
+    private bool _isOperating;
+    private string _operationLabel = "";
+    private bool _isWeb;
+    private string _currentUserName = "System";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isWeb = string.Equals(FormFactor.GetFormFactor(), "Web", StringComparison.OrdinalIgnoreCase);
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _currentUserName = authState.User.Identity?.Name ?? "Admin";
+
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _backupHistory = await BackupService.GetBackupHistoryAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load backup catalog: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task CreateNewBackupAsync()
+    {
+        _isOperating = true;
+        _operationLabel = "Exporting database tables to ZIP archive...";
+        StateHasChanged();
+
+        try
+        {
+            var record = await BackupService.CreateBackupAsync(_currentUserName, "MANUAL", "Manual backup generated from Web/Hybrid dashboard");
+            Snackbar.Add($"Backup archive {record.FileName} generated successfully ({record.TotalRecordsCount} records)!", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Backup failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isOperating = false;
+        }
+    }
+
+    private async Task TriggerFileSelect()
+    {
+        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('backupFileInput')?.click()");
+    }
+
+    private async Task OnArchiveFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        _isOperating = true;
+        _operationLabel = "Validating archive integrity and schema models...";
+        StateHasChanged();
+
+        try
+        {
+            // Max allowed 200MB
+            using var stream = file.OpenReadStream(200 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            ms.Position = 0;
+
+            var validation = await BackupService.ValidateArchiveAsync(ms);
+            if (!validation.IsValid)
+            {
+                Snackbar.Add($"Validation failed: {validation.ErrorMessage}", Severity.Error);
+                return;
+            }
+
+            ms.Position = 0;
+            var parameters = new DialogParameters<RestoreConfirmDialog>
+            {
+                { x => x.ValidationResult, validation },
+                { x => x.ArchiveFileName, file.Name }
+            };
+            var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = false };
+            var dialog = await DialogService.ShowAsync<RestoreConfirmDialog>("Confirm Restore", parameters, options);
+            var result = await dialog.Result;
+
+            if (result != null && !result.Canceled)
+            {
+                _operationLabel = "Executing topological database wipe and restore...";
+                StateHasChanged();
+
+                ms.Position = 0;
+                var restoreResult = await BackupService.RestoreFromArchiveAsync(ms, _currentUserName, file.Name);
+
+                if (restoreResult.Success)
+                {
+                    Snackbar.Add($"Database restored successfully! {restoreResult.TotalRecordsRestored} records restored in {restoreResult.Duration.TotalSeconds:F1}s.", Severity.Success);
+                    await LoadDataAsync();
+                }
+                else
+                {
+                    Snackbar.Add($"Restore error: {restoreResult.ErrorMessage}", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to process archive: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isOperating = false;
+        }
+    }
+
+    private async Task RestoreStoredBackupAsync(BackupRecord record)
+    {
+        _isOperating = true;
+        _operationLabel = $"Validating stored backup {record.FileName}...";
+        StateHasChanged();
+
+        try
+        {
+            var filePath = await BackupService.GetBackupFilePathAsync(record.Id);
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                Snackbar.Add("Backup file not found on disk.", Severity.Error);
+                return;
+            }
+
+            await using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            using var ms = new MemoryStream();
+            await fs.CopyToAsync(ms);
+            ms.Position = 0;
+
+            var validation = await BackupService.ValidateArchiveAsync(ms);
+            if (!validation.IsValid)
+            {
+                Snackbar.Add($"Validation error: {validation.ErrorMessage}", Severity.Error);
+                return;
+            }
+
+            var parameters = new DialogParameters<RestoreConfirmDialog>
+            {
+                { x => x.ValidationResult, validation },
+                { x => x.ArchiveFileName, record.FileName }
+            };
+            var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = false };
+            var dialog = await DialogService.ShowAsync<RestoreConfirmDialog>("Confirm Restore", parameters, options);
+            var result = await dialog.Result;
+
+            if (result != null && !result.Canceled)
+            {
+                _operationLabel = "Executing wipe-and-restore from stored backup...";
+                StateHasChanged();
+
+                var restoreResult = await BackupService.RestoreFromStoredBackupAsync(record.Id, _currentUserName);
+                if (restoreResult.Success)
+                {
+                    Snackbar.Add($"Database restored! {restoreResult.TotalRecordsRestored} records restored.", Severity.Success);
+                    await LoadDataAsync();
+                }
+                else
+                {
+                    Snackbar.Add($"Restore failed: {restoreResult.ErrorMessage}", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Restore failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isOperating = false;
+        }
+    }
+
+    private async Task DeleteBackupAsync(BackupRecord record)
+    {
+        bool? confirm = await DialogService.ShowMessageBoxAsync(
+            "Delete Backup Archive",
+            $"Permanently delete {record.FileName} and remove it from disk?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            var success = await BackupService.DeleteBackupAsync(record.Id);
+            if (success)
+            {
+                Snackbar.Add($"Deleted backup archive {record.FileName}", Severity.Info);
+                await LoadDataAsync();
+            }
+        }
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes >= 1024 * 1024) return $"{(bytes / 1024.0 / 1024.0):F2} MB";
+        if (bytes >= 1024) return $"{(bytes / 1024.0):F1} KB";
+        return $"{bytes} B";
+    }
+
+    private static string GetDeviceIcon(string? formFactor) => formFactor?.ToLowerInvariant() switch
+    {
+        "phone" => Icons.Material.Filled.Smartphone,
+        "tablet" => Icons.Material.Filled.Tablet,
+        "desktop" => Icons.Material.Filled.Computer,
+        "web" => Icons.Material.Filled.Language,
+        _ => Icons.Material.Filled.Devices
+    };
+}

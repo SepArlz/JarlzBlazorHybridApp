@@ -1,0 +1,229 @@
+@using GabsHybridApp.Shared.Models
+@using GabsHybridApp.Shared.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using MudBlazor
+@inject IFormFactor FormFactor
+@inject AuthenticationStateProvider AuthStateProvider
+
+<MudDialog TitleClass="pa-0">
+    <TitleContent>
+        <MudAppBar Elevation="2" Color="Color.Error" Fixed="false">
+            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Class="mr-2" />
+            <MudText Typo="Typo.h6" Color="Color.Inherit" Class="font-weight-bold">
+                Confirm Full Database Restore
+            </MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="Cancel" aria-label="close" Disabled="@_isRestoring" />
+        </MudAppBar>
+    </TitleContent>
+    <DialogContent>
+        <div class="pa-2">
+            <!-- Red Warning Banner -->
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-3 rounded-lg" Icon="@Icons.Material.Filled.Dangerous">
+                <MudText Typo="Typo.subtitle2" Class="font-weight-bold">DESTRUCTIVE DATABASE REPLACEMENT</MudText>
+                <MudText Typo="Typo.body2">
+                    This operation will <b>PERMANENTLY WIPE OUT</b> all current products, customer orders, line items, and device configurations, replacing them with the contents of this archive.
+                </MudText>
+                <MudText Typo="Typo.caption" Class="mt-1 d-block" Style="opacity: 0.95;">
+                    <b>Preserved:</b> User accounts, login passwords, and backup audit history records will <b>NOT</b> be erased.
+                </MudText>
+            </MudAlert>
+
+            <!-- Archive Overview Card -->
+            <MudPaper Elevation="1" Outlined="true" Class="pa-3 mb-3 rounded-lg bg-surface">
+                <div class="d-flex justify-space-between align-center flex-wrap gap-2 mb-2">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.FolderZip" Color="Color.Primary" Size="Size.Medium" />
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold">@ArchiveFileName</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                Created: @(ValidationResult?.Manifest?.CreatedAtUtc.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt") ?? "Unknown") • By: @(ValidationResult?.Manifest?.ExportedBy ?? "System")
+                            </MudText>
+                        </div>
+                    </div>
+                    <div class="d-flex align-center gap-1">
+                        @if (!string.IsNullOrWhiteSpace(ValidationResult?.Manifest?.Version))
+                        {
+                            <MudChip T="string" Color="Color.Default" Variant="Variant.Outlined" Size="Size.Small">
+                                App: <b>@ValidationResult.Manifest.Version</b>
+                            </MudChip>
+                        }
+                        <MudChip T="string" Color="Color.Info" Variant="Variant.Filled" Size="Size.Small">
+                            Total Records: @TotalRecordsCount
+                        </MudChip>
+                    </div>
+                </div>
+
+                <!-- Source Origin vs Restore Destination Badges -->
+                <div class="d-flex align-center gap-2 flex-wrap mt-2 pt-2 border-t">
+                    <div class="d-flex align-center gap-1">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Source Origin:</MudText>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Icon="@GetFormFactorIcon(ValidationResult?.Manifest?.SourceFormFactor)">
+                            <b>@(ValidationResult?.Manifest?.SourceFormFactor ?? "Web")</b>
+                            @if (!string.IsNullOrWhiteSpace(ValidationResult?.Manifest?.SourcePlatform))
+                            {
+                                <span class="ml-1 font-weight-normal">(@ValidationResult.Manifest.SourcePlatform)</span>
+                            }
+                        </MudChip>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Class="mud-text-secondary" />
+                    <div class="d-flex align-center gap-1">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Restore Destination:</MudText>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@GetFormFactorIcon(FormFactor.GetFormFactor())">
+                            <b>@FormFactor.GetFormFactor()</b>
+                            <span class="ml-1 font-weight-normal">(@FormFactor.GetPlatform())</span>
+                        </MudChip>
+                    </div>
+                </div>
+
+                <!-- Schema Compatibility Badge -->
+                @if (ValidationResult?.SchemaDiff != null)
+                {
+                    @if (ValidationResult.SchemaDiff.IsPerfectMatch)
+                    {
+                        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="mt-2 rounded-lg" Icon="@Icons.Material.Filled.CheckCircle">
+                            <MudText Typo="Typo.caption"><b>100% Schema Match:</b> Fast-Path native deserialization will execute with zero data loss.</MudText>
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2 rounded-lg" Icon="@Icons.Material.Filled.AutoFixHigh">
+                            <div class="d-flex flex-column">
+                                <MudText Typo="Typo.caption"><b>Adaptive Model Adapter Enabled:</b> Schema differences detected between archive and current live database.</MudText>
+                                @if (ValidationResult.SchemaDiff.AutoAdaptedMessages.Count > 0)
+                                {
+                                    <MudText Typo="Typo.caption" Class="mt-1">
+                                        <b>Auto-adaptations:</b> @string.Join("; ", ValidationResult.SchemaDiff.AutoAdaptedMessages.Take(3))
+                                        @if (ValidationResult.SchemaDiff.AutoAdaptedMessages.Count > 3)
+                                        {
+                                            <span> (+@(ValidationResult.SchemaDiff.AutoAdaptedMessages.Count - 3) more)</span>
+                                        }
+                                    </MudText>
+                                }
+                            </div>
+                        </MudAlert>
+                    }
+                }
+
+                <!-- Table Breakdown Collapsible -->
+                @if (_isAdmin && ValidationResult?.TableCounts?.Count > 0)
+                {
+                    <MudExpansionPanels Elevation="0" Outlined="true" Dense="true" Class="rounded-lg mt-2">
+                        <MudExpansionPanel Text="@($"View Table Breakdown ({ValidationResult.TableCounts.Count} tables)")">
+                            <div class="d-flex flex-wrap gap-2 pa-1">
+                                @foreach (var kvp in ValidationResult.TableCounts.OrderByDescending(k => k.Value))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(kvp.Value > 0 ? Color.Primary : Color.Default)">
+                                        <b>@kvp.Key:</b>&nbsp;@kvp.Value
+                                    </MudChip>
+                                }
+                            </div>
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+                }
+            </MudPaper>
+
+            <!-- Safety Snapshot Notice -->
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Security">
+                An automatic <b>PRE_RESTORE_SAFETY</b> snapshot will be created before wiping begins. If any error occurs, database changes roll back completely.
+            </MudAlert>
+
+            <!-- Confirmation Challenge -->
+            <MudPaper Elevation="0" Outlined="true" Class="pa-3 rounded-lg border-error">
+                <MudText Typo="Typo.subtitle2" Color="Color.Error" Class="font-weight-bold mb-1">
+                    Verification Challenge
+                </MudText>
+                <MudText Typo="Typo.body2" Class="mb-2">
+                    To prevent accidental data loss, please type <b style="color: var(--mud-palette-error);">RESTORE</b> in the box below to proceed:
+                </MudText>
+
+                <MudTextField T="string"
+                              @bind-Value="_confirmationText"
+                              Placeholder="RESTORE"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              Disabled="@_isRestoring"
+                              Class="mb-1" />
+            </MudPaper>
+
+            @if (_isRestoring)
+            {
+                <div class="d-flex align-center justify-center gap-2 mt-4">
+                    <MudProgressCircular Color="Color.Error" Indeterminate="true" Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Color="Color.Error" Class="font-weight-bold">
+                        Wiping and restoring database... Please do not close your browser.
+                    </MudText>
+                </div>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Outlined" Color="Color.Secondary" Disabled="@_isRestoring">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.RestorePage"
+                   Disabled="@(!IsConfirmAllowed || _isRestoring)"
+                   OnClick="SubmitRestore">
+            Confirm &amp; Wipe-and-Restore
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public BackupValidationResult ValidationResult { get; set; } = default!;
+    [Parameter] public string ArchiveFileName { get; set; } = "backup.zip";
+
+    private string _confirmationText = "";
+    private bool _isRestoring = false;
+    private bool _isAdmin = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var currentUserName = user.Identity?.Name ?? "User";
+        _isAdmin = user.IsInRole("Admin") ||
+                   user.IsInRole("admin") ||
+                   user.IsInRole("Administrator") ||
+                   user.IsInRole("administrator") ||
+                   string.Equals(currentUserName, "admin", StringComparison.OrdinalIgnoreCase) ||
+                   user.HasClaim(c => c.Type == ClaimTypes.Role &&
+                       (c.Value.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
+                        c.Value.Equals("administrator", StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private int TotalRecordsCount => ValidationResult?.TableCounts?.Values.Sum() ?? 0;
+    private bool IsConfirmAllowed => string.Equals(_confirmationText?.Trim(), "RESTORE", StringComparison.Ordinal);
+
+    private void Cancel()
+    {
+        if (!_isRestoring)
+        {
+            MudDialog.Cancel();
+        }
+    }
+
+    private void SubmitRestore()
+    {
+        if (IsConfirmAllowed)
+        {
+            _isRestoring = true;
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+    private static string GetFormFactorIcon(string? formFactor) => formFactor?.ToLowerInvariant() switch
+    {
+        "phone" => Icons.Material.Filled.Smartphone,
+        "tablet" => Icons.Material.Filled.Tablet,
+        "desktop" => Icons.Material.Filled.Computer,
+        "web" => Icons.Material.Filled.Language,
+        _ => Icons.Material.Filled.Devices
+    };
+}

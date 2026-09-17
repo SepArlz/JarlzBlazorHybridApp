@@ -1,12 +1,16 @@
-﻿using GabsHybridApp.Shared.Models;
+using GabsHybridApp.Shared.Data;
+using GabsHybridApp.Shared.Models;
+using GabsHybridApp.Shared.Services;
+using GabsHybridApp.Shared.States;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace GabsHybridApp.Shared.Layout
 {
-    public partial class NotificationPanel
+    public partial class NotificationPanel : IAsyncDisposable
     {
+        [Inject] private IFormFactor? FormFactor { get; set; }
         [Parameter] public string? NotificationHubUrl { get; set; } // https://host/notificationhub
         [Parameter] public bool IncludeSample { get; set; } = false;
 
@@ -16,9 +20,12 @@ namespace GabsHybridApp.Shared.Layout
         private HubConnection? _hubConnection;
         private bool _isConnected = false;
         private bool _hasNewNotification = false;
+        private bool _isWeb = false;
 
         protected override async Task OnInitializedAsync()
         {
+            _isWeb = string.Equals(FormFactor?.GetFormFactor(), "Web", StringComparison.OrdinalIgnoreCase);
+
             if (AuthState is not null)
             {
                 var state = await AuthState;
@@ -26,18 +33,59 @@ namespace GabsHybridApp.Shared.Layout
 
                 if (!string.IsNullOrEmpty(userIdClaim))
                 {
-                    _userId = Guid.Parse(userIdClaim);
+                    if (Guid.TryParse(userIdClaim, out var parsedGuid))
+                    {
+                        _userId = parsedGuid;
+                    }
 
-                    // Fetch notifications from DB
+                    if (_isWeb)
+                    {
+                        // On Web (Blazor Server), hook in-process notifications directly to eliminate loopback deadlock.
+                        NotificationService.OnNotificationReceived += HandleNotificationReceived;
+                        _isConnected = true;
+                    }
+                }
+            }
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender && _userId.HasValue)
+            {
+                try
+                {
                     var dbNotifications = await NotificationService.GetUserNotificationsAsync(_userId.Value);
                     _notifications = new List<Notification>(dbNotifications);
 
-                    // Optionally add sample notifications
                     if (IncludeSample)
                         _notifications.AddRange(GetSampleNotifications());
 
-                    await InitializeSignalRAsync();
+                    if (!_isWeb)
+                    {
+                        // On MAUI / mobile clients, connect to the remote server SignalR hub in background
+                        _ = InitializeSignalRAsync();
+                    }
+
+                    StateHasChanged();
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[NotificationPanel] Notification load notice: {ex.Message}");
+                }
+            }
+            await base.OnAfterRenderAsync(firstRender);
+        }
+
+        private void HandleNotificationReceived(Notification notification)
+        {
+            if (notification.UserId != _userId)
+            {
+                _ = InvokeAsync(() =>
+                {
+                    _notifications.Insert(0, notification);
+                    _hasNewNotification = true;
+                    StateHasChanged();
+                });
             }
         }
 
@@ -45,19 +93,8 @@ namespace GabsHybridApp.Shared.Layout
         {
             string GetNotificationHubUrl()
             {
-                if(!string.IsNullOrWhiteSpace(NotificationHubUrl)) return NotificationHubUrl;
-
-                var baseUri = NavManager.BaseUri;
-
-                bool isRunningInDocker =
-                    Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
-
-                if (isRunningInDocker && baseUri.Contains("localhost"))
-                {
-                    return baseUri.Replace("localhost", "host.docker.internal").TrimEnd('/') + "/notificationhub";
-                }
-
-                return new Uri(new Uri(baseUri), "notificationhub").ToString();
+                if (!string.IsNullOrWhiteSpace(NotificationHubUrl)) return NotificationHubUrl;
+                return $"{StorageConstants.AppWebUrl.TrimEnd('/')}/notificationhub";
             }
 
             _hubConnection = new HubConnectionBuilder()
@@ -65,20 +102,9 @@ namespace GabsHybridApp.Shared.Layout
                 .WithAutomaticReconnect()
                 .Build();
 
-            _hubConnection.On<Notification>("ReceiveNotification", async (notification) =>
-            {
-                if (notification.UserId != _userId)
-                {
-                    await InvokeAsync(() =>
-                    {
-                        _notifications.Insert(0, notification);
-                        _hasNewNotification = true;
-                        StateHasChanged();
-                    });
-                }
-            });
+            _hubConnection.On<Notification>("ReceiveNotification", HandleNotificationReceived);
 
-            const int maxRetries = 5;
+            const int maxRetries = 3;
             int retryCount = 0;
 
             while (!_isConnected && retryCount < maxRetries)
@@ -87,19 +113,30 @@ namespace GabsHybridApp.Shared.Layout
                 {
                     await _hubConnection.StartAsync();
                     _isConnected = true;
-                    Console.WriteLine($"SignalR Connected on attempt {retryCount + 1}: {_hubConnection.State}");
                 }
                 catch (Exception ex)
                 {
                     retryCount++;
-                    Console.WriteLine($"SignalR connection failed: {ex.Message}. Retrying {retryCount}/{maxRetries}...");
+                    Console.WriteLine($"SignalR connection notice: {ex.Message}. Retrying {retryCount}/{maxRetries}...");
                     await Task.Delay(1000);
                 }
             }
+        }
 
-            if (!_isConnected)
+        public async ValueTask DisposeAsync()
+        {
+            if (_isWeb)
             {
-                Console.WriteLine("SignalR connection could not be established after retries. Notifications will be disabled.");
+                NotificationService.OnNotificationReceived -= HandleNotificationReceived;
+            }
+
+            if (_hubConnection != null)
+            {
+                try
+                {
+                    await _hubConnection.DisposeAsync();
+                }
+                catch { }
             }
         }
 

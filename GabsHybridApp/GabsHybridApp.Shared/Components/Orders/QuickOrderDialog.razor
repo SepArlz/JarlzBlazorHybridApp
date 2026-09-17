@@ -1,0 +1,212 @@
+@using GabsHybridApp.Shared.Models
+@using GabsHybridApp.Shared.Services
+@using GabsHybridApp.Shared.Data
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@inject IOrderService OrderService
+@inject IDbContextFactory<HybridAppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudAppBar Color="Color.Info" Elevation="0" Dense="true" Class="px-3">
+            <MudIcon Icon="@Icons.Material.Filled.Bolt" Class="mr-2" />
+            <MudText Typo="Typo.h6">Quick Counter Order (POS Flow)</MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="Cancel" Size="Size.Small" />
+        </MudAppBar>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <!-- Left: Product Catalog Selection -->
+            <MudItem xs="12" md="7">
+                <MudTextField @bind-Value="_searchTerm" Placeholder="Search products..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" />
+                <div style="max-height: 420px; overflow-y: auto; padding-right: 4px;">
+                    <MudGrid Spacing="2">
+                        @foreach (var p in FilteredProducts)
+                        {
+                            <MudItem xs="6" sm="4">
+                                <MudPaper Outlined="true" Class="pa-2 d-flex flex-column justify-space-between rounded" Style="height: 110px; cursor: pointer;" @onclick="@(() => AddProductToCart(p))">
+                                    <div>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold" Style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.2;">
+                                            @p.Name
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@p.Unit</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between align-center">
+                                        <MudText Typo="Typo.body2" Color="Color.Primary" Class="font-weight-bold">@p.UnitPrice.ToString("C")</MudText>
+                                        <MudIconButton Icon="@Icons.Material.Filled.AddShoppingCart" Size="Size.Small" Color="Color.Primary" />
+                                    </div>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </div>
+            </MudItem>
+
+            <!-- Right: Order Ticket & Checkout -->
+            <MudItem xs="12" md="5">
+                <MudPaper Elevation="1" Class="pa-3 rounded-lg d-flex flex-column" Style="height: 100%; min-height: 420px;">
+                    <div class="d-flex justify-space-between align-center mb-2">
+                        <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Order Ticket</MudText>
+                        <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">@_cart.Sum(i => i.Quantity) items</MudChip>
+                    </div>
+
+                    <MudTextField @bind-Value="_customerName" Label="Customer Name" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+                    <MudSelect @bind-Value="_paymentMethod" Label="Payment Method" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2">
+                        <MudSelectItem Value="@("CashOnDelivery")">Cash on Delivery</MudSelectItem>
+                        <MudSelectItem Value="@("GCash")">GCash / E-Wallet</MudSelectItem>
+                        <MudSelectItem Value="@("CreditCard")">Credit Card</MudSelectItem>
+                    </MudSelect>
+
+                    <!-- Cart Item Rows -->
+                    <div style="flex-grow: 1; max-height: 220px; overflow-y: auto;">
+                        @if (_cart.Count == 0)
+                        {
+                            <div class="d-flex flex-column align-center justify-center py-8 text-secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.RemoveShoppingCart" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.caption">Cart is empty. Tap products on the left.</MudText>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var item in _cart)
+                            {
+                                <div class="d-flex justify-space-between align-center py-1 border-b">
+                                    <div style="max-width: 140px;">
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold" Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            @item.ProductName
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@item.UnitPrice.ToString("C")</MudText>
+                                    </div>
+                                    <div class="d-flex align-center gap-1">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Remove" Size="Size.Small" OnClick="@(() => DecrementItem(item))" />
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold">@item.Quantity</MudText>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => item.Quantity++)" />
+                                        <MudText Typo="Typo.body2" Class="ml-2 font-weight-bold" Style="min-width: 60px; text-align: right;">
+                                            @item.LineTotal.ToString("C")
+                                        </MudText>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <MudDivider Class="my-2" />
+
+                    <!-- Totals & Checkout -->
+                    <div class="d-flex justify-space-between align-center my-2">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Grand Total:</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success" Class="font-weight-bold">@_cart.Sum(i => i.LineTotal).ToString("C")</MudText>
+                    </div>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" StartIcon="@Icons.Material.Filled.CheckCircle" Disabled="@(_cart.Count == 0 || string.IsNullOrWhiteSpace(_customerName) || _isProcessing)" OnClick="Checkout">
+                        @(_isProcessing ? "Processing..." : "Complete Order")
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private string _searchTerm = "";
+    private string _customerName = "Walk-in Customer";
+    private string _paymentMethod = "CashOnDelivery";
+    private bool _isProcessing;
+    private List<Product> _allProducts = new();
+    private List<QuickOrderItemDto> _cart = new();
+
+    private IEnumerable<Product> FilteredProducts =>
+        string.IsNullOrWhiteSpace(_searchTerm)
+            ? _allProducts
+            : _allProducts.Where(p => (p.Name ?? "").Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _allProducts = await db.Products.AsNoTracking().OrderBy(p => p.Name).ToListAsync();
+    }
+
+    private void AddProductToCart(Product product)
+    {
+        var existing = _cart.FirstOrDefault(c => c.ProductId == product.Id);
+        if (existing != null)
+        {
+            existing.Quantity++;
+        }
+        else
+        {
+            _cart.Add(new QuickOrderItemDto
+            {
+                ProductId = product.Id,
+                ProductName = product.Name ?? "Product",
+                UnitPrice = product.UnitPrice,
+                Unit = product.Unit,
+                Quantity = 1
+            });
+        }
+    }
+
+    private void DecrementItem(QuickOrderItemDto item)
+    {
+        if (item.Quantity > 1)
+        {
+            item.Quantity--;
+        }
+        else
+        {
+            _cart.Remove(item);
+        }
+    }
+
+    private async Task Checkout()
+    {
+        if (_cart.Count == 0 || string.IsNullOrWhiteSpace(_customerName)) return;
+
+        _isProcessing = true;
+        try
+        {
+            var order = new Order
+            {
+                Id = Guid.CreateVersion7(),
+                CustomerName = _customerName,
+                PaymentMethod = _paymentMethod,
+                PaymentStatus = _paymentMethod == "CashOnDelivery" ? "Pending" : "Paid",
+                Status = "Processing",
+                OrderDateUtc = DateTime.UtcNow,
+                Notes = "Quick Order via POS flow",
+                Items = _cart.Select(c => new OrderItem
+                {
+                    Id = Guid.CreateVersion7(),
+                    ProductId = c.ProductId,
+                    ProductName = c.ProductName,
+                    ProductUnit = c.Unit,
+                    UnitPrice = c.UnitPrice,
+                    Quantity = c.Quantity,
+                    Discount = 0m,
+                    TotalPrice = c.LineTotal
+                }).ToList()
+            };
+
+            await OrderService.CreateOrderAsync(order);
+            Snackbar.Add($"Quick order #{order.OrderNumber} completed for {order.TotalAmount:C}!", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(order));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Checkout failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

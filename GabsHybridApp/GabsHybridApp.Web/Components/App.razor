@@ -6,16 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
 
-    <title>GabsBlazorHybridApp - Modern .NET 9 Blazor Web Application</title>
-    <meta property="og:title" content=">GabsBlazorHybridApp - Modern .NET 9 Blazor Mobile/Web Application" />
-    <meta property="og:description" content="Build modern, beautiful, and fast web applications using Blazor and MudBlazor, powered by .NET 9." />
+    <title>GabsBlazorHybridApp - Modern .NET 10 Blazor Application</title>
+    <meta property="og:title" content="GabsBlazorHybridApp - Modern .NET 10 Blazor Application" />
+    <meta property="og:description" content="Build modern, beautiful, and lightning-fast hybrid applications using Blazor and MudBlazor, powered by .NET 10." />
+
+    <script>
+        try {
+            if (localStorage.getItem('isDarkMode') === 'true') {
+                document.documentElement.classList.add('dark-theme');
+            }
+        } catch (e) { }
+    </script>
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href=@Assets["_content/MudBlazor/MudBlazor.min.css"] rel="stylesheet" />
     <link href=@Assets["_content/CodeBeam.MudBlazor.Extensions/MudExtensions.min.css"] rel="stylesheet" />
-    <link href=@Assets["_content/GabsHybridApp.Shared/MudBlazor.app.css"] rel="stylesheet" />
+    <link href=@Assets["_content/GabsHybridApp.Shared/css/MudBlazor.app.css"] rel="stylesheet" />
 
-    <link href=@Assets["_content/GabsHybridApp.Shared/app.css"] rel="stylesheet" />
+    <link href=@Assets["_content/GabsHybridApp.Shared/css/app.css"] rel="stylesheet" />
     <link href=@Assets["GabsHybridApp.Web.styles.css"] rel="stylesheet" />
     <link rel="icon" type="image/png" href="_content/GabsHybridApp.Shared/favicon.png" />
 
@@ -23,9 +31,21 @@
 </head>
 
 <body>
+    <div id="preloading-logo" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle fill="#2979ff" stroke="#2979ff" stroke-width="2" r="15" cx="40" cy="100"><animate attributeName="opacity" calcMode="spline" dur="2" values="1;0;1;" keySplines=".5 0 .5 1;.5 0 .5 1" repeatCount="indefinite" begin="-.4"></animate></circle><circle fill="#2979ff" stroke="#2979ff" stroke-width="2" r="15" cx="100" cy="100"><animate attributeName="opacity" calcMode="spline" dur="2" values="1;0;1;" keySplines=".5 0 .5 1;.5 0 .5 1" repeatCount="indefinite" begin="-.2"></animate></circle><circle fill="#2979ff" stroke="#2979ff" stroke-width="2" r="15" cx="160" cy="100"><animate attributeName="opacity" calcMode="spline" dur="2" values="1;0;1;" keySplines=".5 0 .5 1;.5 0 .5 1" repeatCount="indefinite" begin="0"></animate></circle></svg>
+    </div>
+
     <Routes @rendermode="RenderModeForPage" />
 
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        Blazor.addEventListener('enhancedload', function () {
+            var loader = document.getElementById('preloading-logo');
+            if (loader) {
+                loader.classList.add('splash-dismissed');
+            }
+        });
+    </script>
     <script src=@Assets["_content/MudBlazor/MudBlazor.min.js"]></script>
     <script src=@Assets["_content/CodeBeam.MudBlazor.Extensions/MudExtensions.min.js"]></script>
 

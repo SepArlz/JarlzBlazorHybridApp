@@ -1,4 +1,4 @@
-﻿// GabsHybridApp.Shared/DependencyInjection.cs
+// GabsHybridApp.Shared/DependencyInjection.cs
 using Blazored.LocalStorage;
 using BlazorState;
 using GabsHybridApp.Shared.Services;
@@ -29,6 +29,13 @@ public static class DependencyInjection
         // App services that are host-agnostic
         services.AddScoped<UserService>();
         services.AddScoped<ProductSyncService>();
+        services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IAppThemeService, DefaultAppThemeService>();
+        services.AddSingleton<IDeviceIdProvider, DefaultDeviceIdProvider>();
+        services.AddSingleton<IBackupStorageProvider, DefaultBackupStorageProvider>();
+        services.AddSingleton<GabsHybridApp.Shared.Services.ModelAdapter.SchemaIntrospectionService>();
+        services.AddSingleton<GabsHybridApp.Shared.Services.ModelAdapter.AdaptiveTableReader>();
+        services.AddScoped<IDataBackupService, DataBackupService>();
 
         // UI libs
         services.AddMudServices();

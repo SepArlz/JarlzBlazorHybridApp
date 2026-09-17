@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -36,14 +36,14 @@ public static class SqliteOptionsExtensions
         this DbContextOptionsBuilder options,
         string? connectionStringOrPath,
         string? basePath)
-        => options.UseSqlite(connectionStringOrPath, basePath, sqliteOptionsAction: null);
+        => options.UseSqlite(connectionStringOrPath ?? string.Empty, basePath ?? string.Empty, sqliteOptionsAction: null);
 
     public static DbContextOptionsBuilder<TContext> UseSqlite<TContext>(
         this DbContextOptionsBuilder<TContext> options,
         string? connectionStringOrPath,
         string? basePath)
         where TContext : DbContext
-        => options.UseSqlite(connectionStringOrPath, basePath, sqliteOptionsAction: null);
+        => options.UseSqlite(connectionStringOrPath ?? string.Empty, basePath ?? string.Empty, sqliteOptionsAction: null);
 
     private static string Normalize(string connectionStringOrPath, string basePath)
     {
