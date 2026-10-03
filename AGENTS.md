@@ -21,9 +21,11 @@ The agent is authorized to run or propose the following lightweight commands dir
 
 ---
 
-## 🚫 Git Commit / Add Policy (Do NOT run or propose commits)
-- **User Managed:** The user manages all git staging, diff reviews, and commits directly in the Visual Studio 2026 Git Changes panel.
-- **Protocol:** The agent must **NEVER** execute `git add`, `git commit`, `git push`, or any staging/committing commands. The agent does not need to present git diffs or prompt the user for permission to commit changes.
+## 🔄 Git Commit / Add Policy (Automated on "git push")
+- **Standard Workflow:** During normal development, staging and diff reviews may be managed directly in the Visual Studio 2026 Git Changes panel.
+- **Automated Commit on "git push":** Whenever the user instructs or asks to **"git push"**:
+  1. **Automatic Commit:** The agent MUST automatically stage pending changes (`git add`) and execute `git commit` with an informative commit message summarizing the changes, **automatically without asking**.
+  2. **Push Options:** For the push itself, the agent presents the push options / offers the choice to push manually in Visual Studio/terminal or have the agent push directly.
 
 ---
 
