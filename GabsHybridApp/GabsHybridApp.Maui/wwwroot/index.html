@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>GabsBlazorHybridApp</title>
+    <title>Jarlz MotoHub</title>
     <base href="/" />
 
     <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
@@ -17,8 +17,13 @@
     <link href="app.css" rel="stylesheet" />
     <link href="GabsHybridApp.Maui.styles.css" rel="stylesheet" />
 
-    <link rel="icon" href="data:,">
-
+    <script>
+        try {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark-theme');
+            }
+        } catch (e) { }
+    </script>
 </head>
 
 <body>

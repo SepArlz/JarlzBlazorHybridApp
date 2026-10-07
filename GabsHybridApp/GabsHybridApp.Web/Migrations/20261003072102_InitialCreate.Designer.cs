@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GabsHybridApp.Web.Migrations
 {
     [DbContext(typeof(HybridAppDbContext))]
-    [Migration("20260917195851_InitialCreate")]
+    [Migration("20261003072102_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

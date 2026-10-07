@@ -1,9 +1,12 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @using System.Text.Json
 
 @inject HttpClient HttpClient
+@inject ILocalStorageService localStorage
+@inject IJSRuntime JS
+@inject IAppThemeService ThemeService
 
-<MyMudThemeProvider IsDarkMode="_isDarkMode" />
+<MyMudThemeProvider @ref="_themeProvider" @bind-IsDarkMode="_isDarkMode" />
 <MyMudProviders />
 
 @if (!_isDarkMode)
@@ -14,13 +17,17 @@
             background-size: cover;
             background-color: var(--mud-palette-dark);
         }
+        html.dark-theme body {
+            background-image: none !important;
+            background-color: var(--mud-palette-dark) !important;
+        }
     </style>
 }
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center" Style="height: 100vh;">
     <div class="d-flex flex-column mud-width-full">
         <MudAppBar Fixed="false">
-            <MudText Typo="Typo.h5" Class="ml-n2">GabsHybridApp</MudText>
+            <MudText Typo="Typo.h5" Class="ml-n2 font-weight-bold">Jarlz MotoHub</MudText>
             <MudSpacer />
             <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" Class="mr-n4" Href="/" />
         </MudAppBar>
@@ -33,6 +40,7 @@
 
 @code {
     bool _isDarkMode = false;
+    private MyMudThemeProvider? _themeProvider;
 
     protected override async Task OnInitializedAsync()
     {
@@ -40,6 +48,27 @@
         if (!_isDarkMode)
         {
             await SetBackgroundWithBingWallpapers();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _themeProvider is not null)
+        {
+            _isDarkMode = await _themeProvider.GetSystemDarkModeAsync();
+            StorageConstants.IsDarkMode = _isDarkMode;
+            await ThemeService.SetThemeAsync(_isDarkMode);
+            await _themeProvider.WatchSystemDarkModeAsync(async isDark =>
+            {
+                _isDarkMode = isDark;
+                StorageConstants.IsDarkMode = isDark;
+                await ThemeService.SetThemeAsync(isDark);
+                try { await JS.InvokeVoidAsync("gabsTheme.setDocumentTheme", isDark); } catch { }
+                await InvokeAsync(StateHasChanged);
+            });
+
+            try { await JS.InvokeVoidAsync("gabsTheme.setDocumentTheme", _isDarkMode); } catch { }
+            StateHasChanged();
         }
     }
 

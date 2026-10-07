@@ -118,7 +118,7 @@ public static class AppVersionInfo
         var os = Environment.OSVersion.ToString();
 
         return $"""
-        Application: GabsBlazorHybridApp
+        Application: Jarlz MotoHub
         Version: {DisplayVersion}
         Full Version: {FullInformationalVersion}
         Platform: {platform}

@@ -10,10 +10,11 @@
 @inject IJSRuntime JS
 @inject NavigationManager NavManager
 @inject IDialogService DialogService
+@inject IAppThemeService ThemeService
 
 <AntiforgeryToken />
 
-<MyMudThemeProvider IsDarkMode="_isDarkMode" />
+<MyMudThemeProvider @ref="_themeProvider" @bind-IsDarkMode="_isDarkMode" />
 <MyMudProviders />
 
 <CascadingValue Value="_isDarkMode" Name="IsDarkMode">
@@ -21,10 +22,10 @@
     <MudDrawer @bind-Open="_drawerOpen"
                ClipMode="IsWebOrDesktop() ? DrawerClipMode.Always : DrawerClipMode.Never"
                Variant="@DrawerVariant.Responsive"
-               Elevation="6"
-               Class="@(_isDarkMode ? "" : "app-nav-drawer")"
+               Elevation="0"
+               Style="border-right: 1px solid var(--mud-palette-lines-default);"
                >
-        <NavMenu IsDarkMode="_isDarkMode" OnToggleDarkMode="ToggleDarkMode" IsWebOrDesktop="IsWebOrDesktop()" />
+        <NavMenu IsDarkMode="_isDarkMode" IsWebOrDesktop="IsWebOrDesktop()" />
     </MudDrawer>
 
     <MudMainContent id="main-content-container" Class="mainlayout-with-bottom-bar-padding">
@@ -35,9 +36,9 @@
 
     @if (IsWebOrDesktop())
     {
-        <MudAppBar id="top-app-bar" Elevation="4">
+        <MudAppBar id="top-app-bar" Elevation="0" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" />
+                <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Medium" Color="Color.Primary" />
             </MudHidden>
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
                 <MudIconButton Icon="@Icons.Material.Outlined.Menu"
@@ -45,13 +46,13 @@
                                Edge="Edge.Start"
                                OnClick="DrawerToggle" />
             </MudHidden>
-            <MudText Typo="Typo.h6" Class="ml-3">GabsHybridApp</MudText>
+            <MudText Typo="Typo.h6" Class="ml-2 font-weight-bold" Style="letter-spacing: -0.02em;">Jarlz MotoHub</MudText>
 
             <MudSpacer />
 
-            <!-- Support Links -->
+            @* Support Links Menu *@
             <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert="true">
-                <MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                <MudMenu EndIcon="@Icons.Material.Outlined.KeyboardArrowDown"
                             Color="Color.Inherit"
                             Label="Support"
                             Dense="true"
@@ -63,18 +64,11 @@
                 </MudMenu>
             </MudHidden>
 
-            <!-- 🔔 Notification Panel (handles SignalR & user data internally) -->
+            @* 🔔 Notification Panel (handles SignalR & user data internally) *@
             <NotificationPanel IncludeSample="true" NotificationHubUrl="@(StorageConstants.AppWebUrl + "/notificationhub")" />
 
-            <!-- 🌙 Dark Mode Toggle -->
-            <MudTooltip Text="Toggle Dark Mode">
-                <MudIconButton Icon="@(_isDarkMode? Icons.Material.Filled.Brightness3 : Icons.Material.Filled.WbSunny)"
-                               Color="Color.Inherit"
-                               OnClick="ToggleDarkMode" />
-            </MudTooltip>
-
             <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert>
-                <!-- 💻 GitHub Link -->
+                @* 💻 GitHub Link *@
                 <MudTooltip Text="Github">
                     <MudIconButton Icon="@Icons.Custom.Brands.GitHub"
                                    Color="Color.Inherit"
@@ -83,7 +77,7 @@
                 </MudTooltip>
             </MudHidden>
 
-            <!-- 👤 User Menu -->
+            @* 👤 User Menu *@
             <AuthorizeView Context="authState">
                 <MudMenu AnchorOrigin="Origin.TopLeft" Dense Class="mt-1 ml-4" >
                     <ActivatorContent Context="userMenuContext">
@@ -93,8 +87,8 @@
                     </ActivatorContent>
                     <ChildContent>
                         <MudListItem T="string" Text="My Account" Icon="@Icons.Material.Outlined.Person" Href="/account/changepassword" />
-                        <MudListItem T="string" Text="About App" Icon="@Icons.Material.Filled.Info" OnClick="OpenAboutAppDialog" />
-                        <MudListItem T="string" Text="Logout" Icon="@Icons.Material.Filled.Logout" OnClick='() => NavManager.NavigateToAfterAuth("/account/logout", Caps.RequiresFullReloadAfterAuth)' />
+                        <MudListItem T="string" Text="About App" Icon="@Icons.Material.Outlined.Info" OnClick="OpenAboutAppDialog" />
+                        <MudListItem T="string" Text="Logout" Icon="@Icons.Material.Outlined.Logout" OnClick='() => NavManager.NavigateToAfterAuth("/account/logout", Caps.RequiresFullReloadAfterAuth)' />
                         <MudDivider />
                     </ChildContent>
                 </MudMenu>
@@ -116,8 +110,8 @@
                     </ActivatorContent>
                     <ChildContent>
                         <MudListItem T="string" Text="My Account" Icon="@Icons.Material.Outlined.Person" Href="/account/changepassword" />
-                        <MudListItem T="string" Text="About App" Icon="@Icons.Material.Filled.Info" OnClick="OpenAboutAppDialog" />
-                        <MudListItem T="string" Text="Logout" Icon="@Icons.Material.Filled.Logout" OnClick='() => NavManager.NavigateToAfterAuth("/account/logout", Caps.RequiresFullReloadAfterAuth)' />
+                        <MudListItem T="string" Text="About App" Icon="@Icons.Material.Outlined.Info" OnClick="OpenAboutAppDialog" />
+                        <MudListItem T="string" Text="Logout" Icon="@Icons.Material.Outlined.Logout" OnClick='() => NavManager.NavigateToAfterAuth("/account/logout", Caps.RequiresFullReloadAfterAuth)' />
                         <MudDivider />
                     </ChildContent>
                 </MudMenu>
@@ -126,21 +120,14 @@
         <MudAppBar id="bottom-app-bar" Bottom Elevation="2" Dense="false" Class="mainlayout-bottom-appbar d-flex justify-center align-center pa-0">
             <MudNavLink Href="/" Match="NavLinkMatch.All" Class="mud-bottom-nav-item no-ripple">
                 <div class="d-flex flex-column align-center gap-1">
-                    <MudIcon Icon="@Icons.Material.Filled.House" />
+                    <MudIcon Icon="@Icons.Material.Outlined.Dashboard" />
                     <span class="mud-typography-caption my-n1">Home</span>
                 </div>
             </MudNavLink>
 
-@*             <MudNavLink Href="/counter" Match="NavLinkMatch.Prefix" Class="mud-bottom-nav-item">
-                <div class="d-flex flex-column align-center gap-1">
-                    <MudIcon Icon="@Icons.Material.Filled.PlusOne" />
-                    <span class="mud-typography-caption my-n1">Counter</span>
-                </div>
-            </MudNavLink> *@
-
             <MudNavLink Href="/device-features" Match="NavLinkMatch.Prefix" Class="mud-bottom-nav-item">
                 <div class="d-flex flex-column align-center gap-1">
-                    <MudIcon Icon="@Icons.Material.Filled.Sensors" />
+                    <MudIcon Icon="@Icons.Material.Outlined.Sensors" />
                     <span class="mud-typography-caption my-n1">Device</span>
                 </div>
             </MudNavLink>
@@ -150,21 +137,21 @@
 
             <MudNavLink Href="/products" Class="mud-bottom-nav-item">
                 <div class="d-flex flex-column align-center gap-1">
-                    <MudIcon Icon="@Icons.Material.Filled.ShoppingBag" />
+                    <MudIcon Icon="@Icons.Material.Outlined.Inventory2" />
                     <span class="mud-typography-caption my-n1">Products</span>
                 </div>
             </MudNavLink>
 
             <MudNavLink Class="mud-bottom-nav-item" OnClick="DrawerToggle">
                 <div class="d-flex flex-column align-center gap-1">
-                    <MudIcon Icon="@Icons.Material.Filled.Menu" />
+                    <MudIcon Icon="@Icons.Material.Outlined.Menu" />
                     <span class="mud-typography-caption my-n1">Menu</span>
                 </div>
             </MudNavLink>
         </MudAppBar>
 
         <MudFab id="main-fab"
-                StartIcon="@Icons.Material.Filled.QrCodeScanner"
+                StartIcon="@Icons.Material.Outlined.QrCodeScanner"
                 Color="Color.Primary"
                 Size="Size.Large"
                 OnClick="@OnFabClick"
@@ -175,7 +162,7 @@
 </MudLayout>
 </CascadingValue>
 
-<!-- Global Error UI -->
+@* Global Error UI *@
 <div id="blazor-error-ui" class="@(IsWebOrDesktop() ? "blazor-error-ui--web" : "blazor-error-ui--mobile")">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
@@ -185,6 +172,7 @@
 @code {
     private bool _drawerOpen = true;
     private bool _isDarkMode = false;
+    private MyMudThemeProvider? _themeProvider;
 
     private void DrawerToggle() => _drawerOpen = !_drawerOpen;
     private bool IsWebOrDesktop() => FormFactor.GetFormFactor() == "Web" || FormFactor.GetPlatform().Contains("WinUI", StringComparison.OrdinalIgnoreCase);
@@ -192,36 +180,57 @@
     private IJSObjectReference? _mod;
     private IJSObjectReference? _handle;
 
-    private async Task ToggleDarkMode()
+    protected override void OnInitialized()
     {
-        _isDarkMode = !_isDarkMode;
-        StorageConstants.IsDarkMode = _isDarkMode;
-        await localStorage.SetItemAsync("isDarkMode", _isDarkMode);
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        _isDarkMode = await localStorage.GetItemAsync<bool>("isDarkMode");
-        StorageConstants.IsDarkMode = _isDarkMode;
+        _isDarkMode = StorageConstants.IsDarkMode;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender) return;
-
-        if (!IsWebOrDesktop())
+        if (firstRender)
         {
-            _mod = await JS.InvokeAsync<IJSObjectReference>("import", "/js/scroll-handler.js");
-            _handle = await _mod.InvokeAsync<IJSObjectReference>(
-                "registerScrollHandler",
-                "",                 // window scroll (Hybrid)
-                "bottom-app-bar",   // bottom bar
-                "main-fab",         // FAB
-                "top-app-bar",      // <-- now exists
-                "main-content-container"
-            );
-        }
+            if (_themeProvider is not null)
+            {
+                _isDarkMode = await _themeProvider.GetSystemDarkModeAsync();
+                StorageConstants.IsDarkMode = _isDarkMode;
+                await ThemeService.SetThemeAsync(_isDarkMode);
+                await _themeProvider.WatchSystemDarkModeAsync(OnSystemPreferenceChanged);
+                StateHasChanged();
+            }
 
+            await SyncDocumentThemeClass(_isDarkMode);
+
+            if (!IsWebOrDesktop())
+            {
+                _mod = await JS.InvokeAsync<IJSObjectReference>("import", "/js/scroll-handler.js");
+                _handle = await _mod.InvokeAsync<IJSObjectReference>(
+                    "registerScrollHandler",
+                    "",                 // window scroll (Hybrid)
+                    "bottom-app-bar",   // bottom bar
+                    "main-fab",         // FAB
+                    "top-app-bar",      // <-- now exists
+                    "main-content-container"
+                );
+            }
+        }
+    }
+
+    private async Task OnSystemPreferenceChanged(bool isDark)
+    {
+        _isDarkMode = isDark;
+        StorageConstants.IsDarkMode = isDark;
+        await ThemeService.SetThemeAsync(isDark);
+        await SyncDocumentThemeClass(isDark);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SyncDocumentThemeClass(bool isDark)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("gabsTheme.setDocumentTheme", isDark);
+        }
+        catch { }
     }
 
     public async ValueTask DisposeAsync()

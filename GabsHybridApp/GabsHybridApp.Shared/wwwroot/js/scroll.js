@@ -65,3 +65,16 @@ window.gabsScroll = {
         }, true); // Capture phase is key to stop children from receiving the click
     }
 };
+
+window.gabsTheme = {
+    setDocumentTheme: function (isDark) {
+        try {
+            if (isDark) {
+                document.documentElement.classList.add('dark-theme');
+            } else {
+                document.documentElement.classList.remove('dark-theme');
+            }
+        } catch (e) { }
+    }
+};
+

@@ -4,7 +4,7 @@
 @inject IFormFactor FormFactor
 @inject NavigationManager NavManager
 
-<PageTitle>Home - GabsBlazorHybridApp (.NET 10)</PageTitle>
+<PageTitle>Home - Jarlz MotoHub</PageTitle>
 
 <style>
     .wallet-action-card {
@@ -152,7 +152,7 @@
 </style>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4 pb-12">
-    <!-- Command Center Hero Banner -->
+    @* SECTION: Command Center Hero Banner *@
     <div class="home-hero-banner primary-hero-paper">
         <div class="hero-ambient-glow"></div>
         <div class="hero-text-scrim"></div>
@@ -160,37 +160,37 @@
         <div class="d-flex flex-column gap-3" style="position: relative; z-index: 10;">
             <div class="d-flex flex-wrap gap-2 mb-1">
                 <span class="glass-badge">
-                    <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" /> .NET 10.0 LTS
+                    <MudIcon Icon="@Icons.Material.Outlined.Verified" Size="Size.Small" /> .NET 10.0 LTS
                 </span>
                 <span class="glass-badge">
-                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" /> C# 14
+                    <MudIcon Icon="@Icons.Material.Outlined.Bolt" Size="Size.Small" /> C# 14
                 </span>
                 <span class="glass-badge">
-                    <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Small" /> MudBlazor v9
+                    <MudIcon Icon="@Icons.Material.Outlined.Palette" Size="Size.Small" /> MudBlazor v9
                 </span>
                 <span class="glass-badge">
-                    <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" /> @FormFactor.GetFormFactor() / @FormFactor.GetPlatform()
+                    <MudIcon Icon="@Icons.Material.Outlined.Devices" Size="Size.Small" /> @FormFactor.GetFormFactor() / @FormFactor.GetPlatform()
                 </span>
             </div>
 
             <MudText Typo="Typo.h3" Class="font-weight-bold" Style="font-size: clamp(1.8rem, 4vw, 2.8rem); line-height: 1.2;">
-                Modern .NET 10 Hybrid Enterprise Template
+                Jarlz MotoHub
             </MudText>
 
             <MudText Typo="Typo.subtitle1" Style="opacity: 0.9; max-width: 760px; font-weight: 300;">
-                High-performance unified architecture powering Web, Android, iOS, and Windows Desktop with reactive SignalR synchronization, offline-first SQLite, database-agnostic backup & restore, and dark hero aesthetics.
+                High-performance parts inventory and motorcycle service management platform built on .NET 10 with offline-first SQLite synchronization, hardware sensor integration, and real-time operations.
             </MudText>
         </div>
     </div>
 
-    <!-- Hero Action Cards (Wallet Style Navigation) -->
+    @* SECTION: Hero Action Cards (Wallet Style Navigation) *@
     <MudGrid Class="mb-6">
-        <!-- 1. Products & Orders -->
+        @* CARD: 1. Products & Orders *@
         <MudItem xs="12" sm="6" md="3">
             <MudPaper Class="wallet-action-card wallet-card-primary pa-4 rounded-lg" Elevation="2" @onclick='() => NavManager.NavigateTo("/orders")'>
                 <div class="d-flex align-center gap-3 mb-3">
                     <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
-                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />
+                        <MudIcon Icon="@Icons.Material.Outlined.ShoppingCart" />
                     </MudAvatar>
                     <div>
                         <MudText Typo="Typo.h6" Class="wallet-card-title">Product Orders</MudText>
@@ -202,17 +202,17 @@
                 </MudText>
                 <div class="d-flex align-center gap-1 text-primary">
                     <MudText Typo="Typo.caption" Class="font-weight-bold">View Orders</MudText>
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Outlined.ArrowForward" Size="Size.Small" />
                 </div>
             </MudPaper>
         </MudItem>
 
-        <!-- 2. Device Features -->
+        @* CARD: 2. Device Features *@
         <MudItem xs="12" sm="6" md="3">
             <MudPaper Class="wallet-action-card wallet-card-info pa-4 rounded-lg" Elevation="2" @onclick='() => NavManager.NavigateTo("/device-features")'>
                 <div class="d-flex align-center gap-3 mb-3">
                     <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Large">
-                        <MudIcon Icon="@Icons.Material.Filled.Sensors" />
+                        <MudIcon Icon="@Icons.Material.Outlined.Sensors" />
                     </MudAvatar>
                     <div>
                         <MudText Typo="Typo.h6" Class="wallet-card-title">Device Sensors</MudText>
@@ -224,17 +224,17 @@
                 </MudText>
                 <div class="d-flex align-center gap-1 text-info">
                     <MudText Typo="Typo.caption" Class="font-weight-bold">Test Hardware</MudText>
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Outlined.ArrowForward" Size="Size.Small" />
                 </div>
             </MudPaper>
         </MudItem>
 
-        <!-- 3. Component Showcase -->
+        @* CARD: 3. Component Showcase *@
         <MudItem xs="12" sm="6" md="3">
             <MudPaper Class="wallet-action-card wallet-card-warning pa-4 rounded-lg" Elevation="2" @onclick='() => NavManager.NavigateTo("/componentsdemo")'>
                 <div class="d-flex align-center gap-3 mb-3">
                     <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large">
-                        <MudIcon Icon="@Icons.Material.Filled.Widgets" />
+                        <MudIcon Icon="@Icons.Material.Outlined.Widgets" />
                     </MudAvatar>
                     <div>
                         <MudText Typo="Typo.h6" Class="wallet-card-title">Showcase</MudText>
@@ -246,17 +246,17 @@
                 </MudText>
                 <div class="d-flex align-center gap-1 text-warning">
                     <MudText Typo="Typo.caption" Class="font-weight-bold">Open Demos</MudText>
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Outlined.ArrowForward" Size="Size.Small" />
                 </div>
             </MudPaper>
         </MudItem>
 
-        <!-- 4. Backup & Maintenance -->
+        @* CARD: 4. Backup & Maintenance *@
         <MudItem xs="12" sm="6" md="3">
             <MudPaper Class="wallet-action-card wallet-card-success pa-4 rounded-lg" Elevation="2" @onclick='() => NavManager.NavigateTo("/backup-restore")'>
                 <div class="d-flex align-center gap-3 mb-3">
                     <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Large">
-                        <MudIcon Icon="@Icons.Material.Filled.SettingsBackupRestore" />
+                        <MudIcon Icon="@Icons.Material.Outlined.SettingsBackupRestore" />
                     </MudAvatar>
                     <div>
                         <MudText Typo="Typo.h6" Class="wallet-card-title">Data Backup</MudText>
@@ -268,24 +268,24 @@
                 </MudText>
                 <div class="d-flex align-center gap-1 text-success">
                     <MudText Typo="Typo.caption" Class="font-weight-bold">Manage Backups</MudText>
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Outlined.ArrowForward" Size="Size.Small" />
                 </div>
             </MudPaper>
         </MudItem>
     </MudGrid>
 
-    <!-- Interactive Architecture & Performance Explorer -->
+    @* SECTION: Interactive Architecture & Performance Explorer *@
     <MudGrid>
         <MudItem xs="12" md="8">
             <MudCard Outlined="true" Class="pa-2">
                 <MudCardContent>
                     <div class="d-flex align-center gap-2 mb-4">
-                        <MudIcon Icon="@Icons.Material.Filled.Explore" Color="Color.Primary" Size="Size.Medium" />
+                        <MudIcon Icon="@Icons.Material.Outlined.Explore" Color="Color.Primary" Size="Size.Medium" />
                         <MudText Typo="Typo.h5" Class="font-weight-bold">Architecture Explorer</MudText>
                     </div>
 
                     <MudTabs Elevation="0" Rounded="true" Centered="false" Color="Color.Primary">
-                        <!-- Tab 1: .NET 10 Core & C# 14 -->
+                        @* Tab 1: .NET 10 Core & C# 14 *@
                         <MudTabPanel Text="Core & C# 14" Icon="@Icons.Material.Outlined.Terminal">
                             <div class="pt-4">
                                 <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Long-Term Support (LTS) & Language Refinements</MudText>
@@ -306,7 +306,7 @@
                             </div>
                         </MudTabPanel>
 
-                        <!-- Tab 2: Blazor HybridWebView & Interop -->
+                        @* Tab 2: Blazor HybridWebView & Interop *@
                         <MudTabPanel Text="Hybrid Interop" Icon="@Icons.Material.Outlined.Phonelink">
                             <div class="pt-4">
                                 <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Host-Agnostic Device Services</MudText>
@@ -317,7 +317,7 @@
                                 <MudGrid Class="mb-2">
                                     <MudItem xs="12" sm="6">
                                         <div class="d-flex align-start gap-2 mb-3">
-                                            <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Color="Color.Secondary" Size="Size.Small" />
+                                            <MudIcon Icon="@Icons.Material.Outlined.SwapHoriz" Color="Color.Secondary" Size="Size.Small" />
                                             <div>
                                                 <MudText Typo="Typo.body2" Class="font-weight-bold">Two-Way JS Interop</MudText>
                                                 <MudText Typo="Typo.caption" Color="Color.Secondary">Invoke native APIs from JavaScript or vice-versa with seamless fallback to browser HTML5 APIs.</MudText>
@@ -326,7 +326,7 @@
                                     </MudItem>
                                     <MudItem xs="12" sm="6">
                                         <div class="d-flex align-start gap-2 mb-3">
-                                            <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Secondary" Size="Size.Small" />
+                                            <MudIcon Icon="@Icons.Material.Outlined.Security" Color="Color.Secondary" Size="Size.Small" />
                                             <div>
                                                 <MudText Typo="Typo.body2" Class="font-weight-bold">Silent Delta-Sync</MudText>
                                                 <MudText Typo="Typo.caption" Color="Color.Secondary">SignalR backpressure coordinator dispatches instant entity updates without reload lag.</MudText>
@@ -337,7 +337,7 @@
                             </div>
                         </MudTabPanel>
 
-                        <!-- Tab 3: Security & Storage -->
+                        @* Tab 3: Security & Storage *@
                         <MudTabPanel Text="Security & DR" Icon="@Icons.Material.Outlined.Security">
                             <div class="pt-4">
                                 <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Disaster Recovery & Offline Storage</MudText>
@@ -352,12 +352,12 @@
         </MudItem>
 
         <MudItem xs="12" md="4">
-            <!-- Sandbox Simulation Widget -->
+            @* WIDGET: Sandbox Simulation Widget *@
             <MudCard Outlined="true" Style="height: 100%; display: flex; flex-direction: column;">
                 <MudCardHeader>
                     <CardHeaderContent>
                         <div class="d-flex align-center gap-2">
-                            <MudIcon Icon="@Icons.Material.Filled.DashboardCustomize" Color="Color.Secondary" />
+                            <MudIcon Icon="@Icons.Material.Outlined.DashboardCustomize" Color="Color.Secondary" />
                             <MudText Typo="Typo.h6" Class="font-weight-bold">Compiler Sandbox</MudText>
                         </div>
                         <MudText Typo="Typo.caption">Interactive JIT & GC optimization visualizer</MudText>
@@ -413,7 +413,7 @@
                         else
                         {
                             <div class="d-flex flex-column align-center justify-center py-8 text-center">
-                                <MudIcon Icon="@Icons.Material.Filled.PlayCircleFilled" Size="Size.Large" Color="Color.Primary" Style="opacity: 0.5; font-size: 3rem;" />
+                                <MudIcon Icon="@Icons.Material.Outlined.PlayCircleOutline" Size="Size.Large" Color="Color.Primary" Style="opacity: 0.5; font-size: 3rem;" />
                                 <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">Select a workload and click execute to simulate JIT runtime optimizations.</MudText>
                             </div>
                         }

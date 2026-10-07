@@ -20,109 +20,105 @@
 }
 
 <style>
-    .mud-nav-link.mud-ripple.active, .mud-nav-link.mud-ripple:hover {
-        background-color: @(IsDarkMode ? "var(--mud-palette-dark-lighten)" : "rgba(255, 255, 255, 0.15)");
+    /* ==========================================================================
+       💚 Neon Console Navigation Sidebar Styling
+       ========================================================================== */
+    .neon-nav-menu .mud-nav-link {
+        border-radius: 6px;
+        margin: 2px 0;
+        padding: 8px 12px;
+        color: var(--mud-palette-text-secondary) !important;
+        font-size: 0.875rem;
+        font-weight: 400;
+        transition: all 0.15s ease-in-out;
     }
 
-    /* Light mode sidebar specific overrides */
-    .app-nav-drawer {
-        background-color: var(--mud-palette-primary) !important;
+    .neon-nav-menu .mud-nav-link .mud-icon-root {
+        color: var(--mud-palette-text-secondary) !important;
+        font-size: 1.15rem;
+        transition: color 0.15s ease-in-out;
     }
 
-    .app-nav-drawer .mud-nav-link {
-        color: rgba(255, 255, 255, 0.75) !important;
-        transition: background-color 0.15s, color 0.15s;
+    .neon-nav-menu .mud-nav-link:hover {
+        background-color: @(IsDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.04)") !important;
+        color: var(--mud-palette-text-primary) !important;
     }
 
-    .app-nav-drawer .mud-nav-link .mud-icon-root {
-        color: rgba(255, 255, 255, 0.75) !important;
-        transition: color 0.15s;
+    .neon-nav-menu .mud-nav-link:hover .mud-icon-root {
+        color: var(--mud-palette-text-primary) !important;
     }
 
-    .app-nav-drawer .mud-nav-link:hover {
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        color: #ffffff !important;
+    .neon-nav-menu .mud-nav-link.active {
+        background-color: @(IsDarkMode ? "rgba(0, 229, 153, 0.10)" : "rgba(0, 184, 117, 0.10)") !important;
+        color: var(--mud-palette-primary) !important;
+        font-weight: 500 !important;
+        border-left: 3px solid var(--mud-palette-primary);
     }
 
-    .app-nav-drawer .mud-nav-link:hover .mud-icon-root {
-        color: #ffffff !important;
+    .neon-nav-menu .mud-nav-link.active .mud-icon-root {
+        color: var(--mud-palette-primary) !important;
     }
 
-    .app-nav-drawer .mud-nav-link.active {
-        background-color: rgba(255, 255, 255, 0.2) !important;
-        color: #ffffff !important;
-        font-weight: 500;
+    .neon-nav-section-title {
+        font-size: 0.72rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--mud-palette-text-secondary) !important;
+        opacity: 0.75;
+        padding: 12px 14px 4px 14px;
+        margin: 0;
     }
 
-    .app-nav-drawer .mud-nav-link.active .mud-icon-root {
-        color: #ffffff !important;
-    }
-
-    .app-nav-drawer .mud-divider {
-        border-color: rgba(255, 255, 255, 0.15) !important;
-    }
-
-    .app-nav-drawer .mud-nav-group .mud-nav-group-heading {
-        color: rgba(255, 255, 255, 0.75) !important;
-    }
-
-    .app-nav-drawer .mud-nav-group .mud-nav-group-heading:hover {
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        color: #ffffff !important;
-    }
-
-    .app-nav-drawer .mud-typography-subtitle2 {
-        color: rgba(255, 255, 255, 0.6) !important;
+    .neon-nav-divider {
+        border-color: var(--mud-palette-lines-default) !important;
+        margin: 8px 0;
     }
 </style>
 
-<MudNavMenu Class="pa-3" Rounded Margin="Margin.Normal" Color="Color.Inherit">
-    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Home" Class="rounded">Home</MudNavLink>
-    <MudNavLink Href="weather" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.WaterDrop" Class="rounded">Weather</MudNavLink>
-    <MudNavLink Href="counter" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.PlusOne" Class="rounded">Counter (@currentCount)</MudNavLink>
-    <MudNavLink Href="device-features" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Sensors" Class="rounded">Device Features</MudNavLink>
-    <MudNavLink Href="components-demo" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Widgets" Class="rounded">Component Demo</MudNavLink>
-    <MudNavLink Href="auth" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.VerifiedUser" Class="rounded">Auth</MudNavLink>
-    <MudNavLink Href="products" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.ShoppingBag" Class="rounded">Products</MudNavLink>
-    <MudNavLink Href="orders" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.PointOfSale" Class="rounded">Orders</MudNavLink>
-    <MudNavLink Href="backup-restore" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.SettingsBackupRestore" Class="rounded">Backup &amp; Restore</MudNavLink>
-    <MudNavLink Href="account/users" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.SupervisedUserCircle" Class="rounded">Manage Users</MudNavLink>
-    <MudDivider Class="mb-4" />
+<MudNavMenu Class="pa-2 neon-nav-menu" Margin="Margin.Dense" Color="Color.Inherit">
+    <MudText Typo="Typo.caption" Class="neon-nav-section-title">Platform</MudText>
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.GridView">Home</MudNavLink>
+    <MudNavLink Href="orders" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.ReceiptLong">Orders</MudNavLink>
+    <MudNavLink Href="products" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Inventory2">Products</MudNavLink>
+    <MudNavLink Href="device-features" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Sensors">Device Features</MudNavLink>
+    <MudNavLink Href="backup-restore" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.History">Backup &amp; Restore</MudNavLink>
+    <MudNavLink Href="account/users" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.ManageAccounts">Manage Users</MudNavLink>
 
-    <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">Links</MudText>
+    <MudDivider Class="neon-nav-divider" />
+    <MudText Typo="Typo.caption" Class="neon-nav-section-title">Developer &amp; Tools</MudText>
+    <MudNavLink Href="components-demo" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Widgets">Components Demo</MudNavLink>
+    <MudNavLink Href="weather" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.CloudQueue">Weather</MudNavLink>
+    <MudNavLink Href="counter" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.PlusOne">Counter (@currentCount)</MudNavLink>
+    <MudNavLink Href="auth" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Shield">Auth</MudNavLink>
+
+    <MudDivider Class="neon-nav-divider" />
+    <MudText Typo="Typo.caption" Class="neon-nav-section-title">Resources</MudText>
     <MudNavLink Href="https://mudblazor.com" Icon="@Icons.Custom.Brands.MudBlazor" Target="_blank">MudBlazor</MudNavLink>
     <MudNavLink Href="https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor" Icon="@Icons.Custom.Brands.MicrosoftVisualStudio" Target="_blank">Blazor</MudNavLink>
     <MudNavLink Href="https://dotnet.microsoft.com/en-us/apps/aspnet" Icon="@Icons.Custom.Brands.Microsoft" Target="_blank">ASP.NET</MudNavLink>
 
-    <MudNavGroup Title="About Me" Icon="@Icons.Material.Outlined.Person" HideExpandIcon="true">
+    <MudNavGroup Title="About" Icon="@Icons.Material.Outlined.Info" HideExpandIcon="true">
         <MudNavLink Href="https://github.com/hubert17" Icon="@Icons.Material.Outlined.Code">Github</MudNavLink>
-        <MudNavLink Href="https://bernardgabon.com" Icon="@Icons.Material.Outlined.Web">BernardGabon.com</MudNavLink>
+        <MudNavLink Href="https://bernardgabon.com" Icon="@Icons.Material.Outlined.Language">BernardGabon.com</MudNavLink>
     </MudNavGroup>
-    <MudDivider Class="mb-4" />
+    <MudDivider Class="neon-nav-divider" />
 
     <MudHidden Breakpoint="Breakpoint.SmAndUp">
-        <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">Small Screen Menu</MudText>
-        <MudNavGroup Title="Support" Icon="@Icons.Material.Filled.KeyboardArrowDown" HideExpandIcon="true">
-            <MudNavLink>Community</MudNavLink>
-            <MudNavLink>Resources</MudNavLink>
-            <MudNavLink Href="https://mudblazor.com/docs/overview">MudBlazor Documentation</MudNavLink>
+        <MudText Typo="Typo.caption" Class="neon-nav-section-title">Support</MudText>
+        <MudNavGroup Title="Help" Icon="@Icons.Material.Outlined.HelpOutline" HideExpandIcon="true">
+            <MudNavLink Href="https://mudblazor.com/docs/overview">Documentation</MudNavLink>
             <MudNavLink Href="https://mudblazor.com/getting-started/installation">Quick-Start Guide</MudNavLink>
         </MudNavGroup>
         <MudNavLink Href="https://github.com/hubert17/EdwillJSystem" Icon="@Icons.Custom.Brands.GitHub" Target="_blank">EdwillJSystem</MudNavLink>
-        <MudNavLink OnClick="OnToggleDarkMode" Icon="@(IsDarkMode? Icons.Material.Filled.WbSunny : Icons.Material.Filled.Brightness3)">Switch Dark Mode</MudNavLink>
     </MudHidden>
-
 </MudNavMenu>
-
 
 @code {
     [Parameter] public bool IsDarkMode { get; set; }
-    [Parameter] public EventCallback OnToggleDarkMode { get; set; }
     [Parameter] public bool IsWebOrDesktop { get; set; }
 
     CounterState CounterState => GetState<CounterState>();
     private int currentCount => CounterState.Count;
-
-
 }
 

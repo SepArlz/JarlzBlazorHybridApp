@@ -19,27 +19,29 @@
     --bs-nav-link-hover-color: var(--mud-palette-primary-darken) !important;
 }
 
-/* Modern Trendy Dark Mode (Hero Dark Theme) Enhancements */
+/* Modern Neon Theme (Developer Console Aesthetic) Enhancements */
 .dark-theme .mud-button-filled-primary,
 .mud-theme-dark .mud-button-filled-primary {
-    background: linear-gradient(135deg, #2563eb 0%, #6366f1 100%) !important;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
-    transition: all 0.25s ease-in-out !important;
+    background: #00e599 !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 10px rgba(0, 229, 153, 0.25) !important;
+    transition: all 0.2s ease-in-out !important;
     border: none !important;
 }
 
 .dark-theme .mud-button-filled-primary:hover,
 .mud-theme-dark .mud-button-filled-primary:hover {
-    background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%) !important;
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6) !important;
+    background: #00ffaa !important;
+    box-shadow: 0 4px 16px rgba(0, 229, 153, 0.45) !important;
     transform: translateY(-1px);
 }
 
 .dark-theme .primary-hero-paper,
 .mud-theme-dark .primary-hero-paper {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
-    border: 1px solid rgba(59, 130, 246, 0.25) !important;
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 0 25px rgba(37, 99, 235, 0.12) !important;
+    background: #0d0f12 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 229, 153, 0.05) !important;
     position: relative;
     overflow: hidden;
 }
@@ -51,12 +53,14 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, #3b82f6, #818cf8, #38bdf8);
+    background: linear-gradient(90deg, #00e599, #00b875, #10b981);
 }
 
 .dark-theme .mud-chip-filled-primary,
 .mud-theme-dark .mud-chip-filled-primary {
-    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+    background: rgba(0, 229, 153, 0.12) !important;
+    color: #00e599 !important;
+    border: 1px solid rgba(0, 229, 153, 0.3) !important;
 }
 
 /* Modern Hero-Gradient Sync & Connectivity Status Banners */

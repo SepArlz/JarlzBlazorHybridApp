@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
 
-    <title>GabsBlazorHybridApp - Modern .NET 10 Blazor Application</title>
-    <meta property="og:title" content="GabsBlazorHybridApp - Modern .NET 10 Blazor Application" />
+    <title>Jarlz MotoHub - Motorcycle Parts &amp; Service Management</title>
+    <meta property="og:title" content="Jarlz MotoHub - Motorcycle Parts &amp; Service Management" />
     <meta property="og:description" content="Build modern, beautiful, and lightning-fast hybrid applications using Blazor and MudBlazor, powered by .NET 10." />
 
     <script>
         try {
-            if (localStorage.getItem('isDarkMode') === 'true') {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 document.documentElement.classList.add('dark-theme');
             }
         } catch (e) { }

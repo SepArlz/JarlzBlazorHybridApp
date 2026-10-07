@@ -1,5 +1,5 @@
 <CascadingValue Value=false Name="UsePopoverProvider">
-    <MudThemeProvider @bind-IsDarkMode="@IsDarkMode" Theme="MyTheme"></MudThemeProvider>
+    <MudThemeProvider @ref="_mudThemeProvider" @bind-IsDarkMode="@IsDarkMode" Theme="MyTheme"></MudThemeProvider>
 </CascadingValue>
 
 @if (IsDarkMode)
@@ -22,15 +22,15 @@
             box-shadow: 0 4px 20px rgba(225, 29, 72, 0.3) !important;
         }
 
-        /* 🔷 Primary Dialog AppBars */
+        /* 🔷 Primary Dialog AppBars (Neon Emerald) */
         .mud-dialog .mud-appbar.mud-theme-primary,
         .mud-dialog .mud-appbar.mud-appbar-primary,
         .mud-dialog .mud-appbar[class*="primary"],
         .mud-dialog-title .mud-appbar.mud-theme-primary,
         .mud-dialog-title .mud-appbar[class*="primary"] {
-            background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #3b82f6 100%) !important;
-            border-bottom: 1px solid rgba(96, 165, 250, 0.3) !important;
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3) !important;
+            background: linear-gradient(135deg, #042f2e 0%, #065f46 50%, #00e599 100%) !important;
+            border-bottom: 1px solid rgba(0, 229, 153, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(0, 229, 153, 0.2) !important;
         }
 
         /* 💜 Secondary Dialog AppBars */
@@ -39,9 +39,9 @@
         .mud-dialog .mud-appbar[class*="secondary"],
         .mud-dialog-title .mud-appbar.mud-theme-secondary,
         .mud-dialog-title .mud-appbar[class*="secondary"] {
-            background: linear-gradient(135deg, #312e81 0%, #4338ca 50%, #6366f1 100%) !important;
-            border-bottom: 1px solid rgba(165, 180, 252, 0.3) !important;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3) !important;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%) !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
         }
 
         /* ℹ️ Info Dialog AppBars */
@@ -55,15 +55,15 @@
             box-shadow: 0 4px 20px rgba(2, 132, 199, 0.3) !important;
         }
 
-        /* 🌲 Success Dialog AppBars */
+        /* 🌲 Success Dialog AppBars (Neon Emerald) */
         .mud-dialog .mud-appbar.mud-theme-success,
         .mud-dialog .mud-appbar.mud-appbar-success,
         .mud-dialog .mud-appbar[class*="success"],
         .mud-dialog-title .mud-appbar.mud-theme-success,
         .mud-dialog-title .mud-appbar[class*="success"] {
-            background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%) !important;
-            border-bottom: 1px solid rgba(52, 211, 153, 0.3) !important;
-            box-shadow: 0 4px 20px rgba(5, 150, 105, 0.3) !important;
+            background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #00e599 100%) !important;
+            border-bottom: 1px solid rgba(0, 229, 153, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(0, 229, 153, 0.25) !important;
         }
 
         /* ⚠️ Warning Dialog AppBars */
@@ -80,65 +80,94 @@
         /* 🌑 Default / Neutral Dialog AppBars */
         .mud-dialog .mud-appbar:not([class*="primary"]):not([class*="error"]):not([class*="success"]):not([class*="warning"]):not([class*="info"]):not([class*="secondary"]),
         .mud-dialog-title .mud-appbar:not([class*="primary"]):not([class*="error"]):not([class*="success"]):not([class*="warning"]):not([class*="info"]):not([class*="secondary"]) {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%) !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+            background: linear-gradient(135deg, #07080a 0%, #0d0f12 60%, #16181d 100%) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
         }
     </style>
 }
 
 @code {
+    private MudThemeProvider _mudThemeProvider = null!;
+
     [Parameter] public bool IsDarkMode { get; set; }
+    [Parameter] public EventCallback<bool> IsDarkModeChanged { get; set; }
+
+    public async Task<bool> GetSystemDarkModeAsync()
+    {
+        if (_mudThemeProvider is not null)
+            return await _mudThemeProvider.GetSystemDarkModeAsync();
+        return false;
+    }
+
+    public async Task WatchSystemDarkModeAsync(Func<bool, Task> callback)
+    {
+        if (_mudThemeProvider is not null)
+            await _mudThemeProvider.WatchSystemDarkModeAsync(callback);
+    }
 
     public static MudTheme MyTheme => new()
     {
         PaletteLight = new PaletteLight
         {
-            Primary = Colors.Blue.Accent3,
-            Secondary = Colors.BlueGray.Lighten1,
-            Success = Colors.Green.Darken2,
-            Info = Colors.Cyan.Lighten1,
-            Warning = Colors.Amber.Default,
-            Error = Colors.Red.Darken2,
-            Dark = Colors.BlueGray.Darken4,
+            Primary = "#00b875",
+            PrimaryContrastText = "#ffffff",
+            Secondary = "#64748b",
+            SecondaryContrastText = "#ffffff",
+            Tertiary = "#00995f",
+            Success = "#059669",
+            Info = "#0284c7",
+            Warning = "#d97706",
+            Error = "#e11d48",
+            Dark = "#0f172a",
 
-            TextPrimary = Colors.Gray.Darken4,
-            TextSecondary = Colors.BlueGray.Darken2,
+            TextPrimary = "#0f172a",
+            TextSecondary = "#64748b",
+            TextDisabled = "#94a3b8",
 
-            Background = Colors.Gray.Lighten5,
-            AppbarBackground = Colors.Blue.Accent3,
-            AppbarText = Colors.Shades.White,
-            DrawerBackground = Colors.Shades.White,
-            DrawerText = Colors.Gray.Darken4,
-            DrawerIcon = Colors.Gray.Darken1,
+            Background = "#fbfcfd",
+            Surface = "#ffffff",
+            AppbarBackground = "#ffffff",
+            AppbarText = "#0f172a",
+            DrawerBackground = "#f8fafc",
+            DrawerText = "#0f172a",
+            DrawerIcon = "#64748b",
 
-            ActionDefault = Colors.Gray.Darken1,
-            ActionDisabled = Colors.Gray.Lighten1,
-            ActionDisabledBackground = Colors.Gray.Lighten3,
+            ActionDefault = "#64748b",
+            ActionDisabled = "#94a3b8",
+            ActionDisabledBackground = "rgba(0, 0, 0, 0.04)",
+
+            Divider = "rgba(0, 0, 0, 0.08)",
+            LinesDefault = "rgba(0, 0, 0, 0.08)",
+            LinesInputs = "rgba(0, 0, 0, 0.16)",
+            TableLines = "rgba(0, 0, 0, 0.06)",
+            TableStriped = "rgba(0, 0, 0, 0.015)",
+            TableHover = "rgba(0, 0, 0, 0.025)",
         },
 
         PaletteDark = new PaletteDark
         {
-            Primary = "#3b82f6",
-            PrimaryContrastText = "#ffffff",
-            Secondary = "#818cf8",
+            Primary = "#00e599",
+            PrimaryContrastText = "#000000",
+            Secondary = "#94a3b8",
             SecondaryContrastText = "#ffffff",
-            Success = "#10b981",
+            Tertiary = "#00c982",
+            Success = "#00e599",
             Info = "#38bdf8",
             Warning = "#f59e0b",
             Error = "#f43f5e",
-            Dark = "#0f172a",
+            Dark = "#0a0b0d",
 
-            Background = "#0b0f17",
-            Surface = "#151c2c",
-            AppbarBackground = "#0f172a",
+            Background = "#000000",
+            Surface = "#0d0f12",
+            AppbarBackground = "#07080a",
             AppbarText = "#f8fafc",
-            DrawerBackground = "#0b0f17",
+            DrawerBackground = "#090a0d",
             DrawerText = "#e2e8f0",
-            DrawerIcon = "#94a3b8",
+            DrawerIcon = "#8b949e",
 
             TextPrimary = "#f8fafc",
-            TextSecondary = "#94a3b8",
+            TextSecondary = "#8b949e",
             TextDisabled = "#475569",
 
             ActionDefault = "#94a3b8",
@@ -146,12 +175,12 @@
             ActionDisabledBackground = "rgba(255, 255, 255, 0.05)",
 
             Divider = "rgba(255, 255, 255, 0.08)",
-            LinesDefault = "rgba(255, 255, 255, 0.12)",
-            LinesInputs = "rgba(255, 255, 255, 0.2)",
-            TableLines = "rgba(255, 255, 255, 0.08)",
+            LinesDefault = "rgba(255, 255, 255, 0.08)",
+            LinesInputs = "rgba(255, 255, 255, 0.16)",
+            TableLines = "rgba(255, 255, 255, 0.06)",
             TableStriped = "rgba(255, 255, 255, 0.02)",
-            TableHover = "rgba(255, 255, 255, 0.04)",
-            OverlayDark = "rgba(11, 15, 23, 0.8)",
+            TableHover = "rgba(255, 255, 255, 0.03)",
+            OverlayDark = "rgba(0, 0, 0, 0.85)",
         },
 
         LayoutProperties = new LayoutProperties()

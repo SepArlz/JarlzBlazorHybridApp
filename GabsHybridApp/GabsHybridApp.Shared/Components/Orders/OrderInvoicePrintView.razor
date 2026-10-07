@@ -5,22 +5,22 @@
 <MudDialog>
     <TitleContent>
         <MudAppBar Color="Color.Dark" Elevation="0" Dense="true" Class="px-3">
-            <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Class="mr-2" />
+            <MudIcon Icon="@Icons.Material.Outlined.ReceiptLong" Class="mr-2" />
             <MudText Typo="Typo.h6">Commercial Invoice #@Order.OrderNumber</MudText>
             <MudSpacer />
-            <MudButton StartIcon="@Icons.Material.Filled.Print" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="PrintInvoice" Class="mr-2">
+            <MudButton StartIcon="@Icons.Material.Outlined.Print" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="PrintInvoice" Class="mr-2">
                 Print
             </MudButton>
-            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="Close" Size="Size.Small" />
+            <MudIconButton Icon="@Icons.Material.Outlined.Close" Color="Color.Inherit" OnClick="Close" Size="Size.Small" />
         </MudAppBar>
     </TitleContent>
     <DialogContent>
         <div class="invoice-container pa-4" style="background: white; color: black; min-height: 480px; font-family: 'Roboto', sans-serif;">
-            <!-- Invoice Header -->
+            @* Invoice Header *@
             <div class="d-flex justify-space-between align-start border-b pb-4 mb-4">
                 <div>
-                    <MudText Typo="Typo.h5" Class="font-weight-bold" Style="color: #1e3a8a;">GabsBlazorHybridApp Enterprises</MudText>
-                    <MudText Typo="Typo.caption" Style="color: #64748b;">Enterprise Hybrid E-Commerce & Retail Solutions</MudText>
+                    <MudText Typo="Typo.h5" Class="font-weight-bold" Style="color: #1e3a8a;">Jarlz MotoHub</MudText>
+                    <MudText Typo="Typo.caption" Style="color: #64748b;">Motorcycle Parts, Accessories &amp; Service Workshop</MudText>
                     <MudText Typo="Typo.body2" Class="mt-1" Style="color: #334155;">100 Innovation Boulevard, Tech District</MudText>
                     <MudText Typo="Typo.body2" Style="color: #334155;">contact@gabshybridapp.local | +63 (900) 123-4567</MudText>
                 </div>
@@ -32,7 +32,7 @@
                 </div>
             </div>
 
-            <!-- Customer & Shipping -->
+            @* Customer & Shipping *@
             <div class="d-flex justify-space-between mb-4">
                 <div>
                     <MudText Typo="Typo.caption" Class="font-weight-bold" Style="color: #64748b; text-transform: uppercase;">Billed To:</MudText>
@@ -56,7 +56,7 @@
                 </div>
             </div>
 
-            <!-- Items Table -->
+            @* Items Table *@
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
                 <thead>
                     <tr style="background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
@@ -87,7 +87,7 @@
                 </tbody>
             </table>
 
-            <!-- Totals Breakdown -->
+            @* Totals Breakdown *@
             <div class="d-flex justify-end">
                 <div style="width: 260px;">
                     <div class="d-flex justify-space-between py-1" style="font-size: 0.875rem; color: #475569;">
@@ -122,7 +122,7 @@
                 </div>
             }
 
-            <!-- Footer Notice -->
+            @* Footer Notice *@
             <div class="text-center mt-6 pt-4 border-t" style="color: #94a3b8; font-size: 0.8rem;">
                 Thank you for your business! This is a system-generated commercial invoice.
             </div>
@@ -130,7 +130,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Close">Close</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" OnClick="PrintInvoice">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Print" OnClick="PrintInvoice">
             Print Invoice
         </MudButton>
     </DialogActions>

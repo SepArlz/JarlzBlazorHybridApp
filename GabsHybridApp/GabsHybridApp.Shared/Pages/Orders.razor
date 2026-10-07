@@ -11,11 +11,11 @@
 <PageTitle>Product Orders - Management</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="px-0 mt-4 mb-8">
-    <!-- Page Hero Header -->
+@* DESIGN LANGUAGE: Page Hero Header — Operational title, icon badge, and action toolbar *@
     <div class="d-flex justify-space-between align-center mb-4 flex-wrap gap-2">
         <div class="d-flex align-center gap-3">
             <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
-                <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Large" />
+                <MudIcon Icon="@Icons.Material.Outlined.ShoppingCart" Size="Size.Large" />
             </MudAvatar>
             <div>
                 <MudText Typo="Typo.h5" Class="font-weight-bold">Product Orders</MudText>
@@ -24,17 +24,17 @@
         </div>
 
         <div class="d-flex align-center gap-2 flex-wrap">
-            <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.Bolt" Size="Size.Small" OnClick="OpenQuickOrderDialog">
+            <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Outlined.Bolt" Size="Size.Small" OnClick="OpenQuickOrderDialog">
                 Quick Counter Order
             </MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="OpenNewOrderDialog">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small" OnClick="OpenNewOrderDialog">
                 New Order
             </MudButton>
-            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" Size="Size.Small" OnClick="LoadDataAsync" />
+            <MudIconButton Icon="@Icons.Material.Outlined.Refresh" Color="Color.Default" Size="Size.Small" OnClick="LoadDataAsync" />
         </div>
     </div>
 
-    <!-- Summary Metrics Cards -->
+    @* DESIGN LANGUAGE: KPI Metric Grid — Responsive 2x2 mobile wrap / 4-column desktop dashboard cards *@
     <MudGrid Class="mb-4">
         <MudItem xs="6" sm="3">
             <MudPaper Outlined="true" Class="pa-3 rounded-lg">
@@ -44,7 +44,7 @@
                         <MudText Typo="Typo.h5" Class="font-weight-bold">@_summary.TotalOrders</MudText>
                     </div>
                     <MudAvatar Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Medium">
-                        <MudIcon Icon="@Icons.Material.Filled.Receipt" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Outlined.Receipt" Size="Size.Small" />
                     </MudAvatar>
                 </div>
             </MudPaper>
@@ -57,7 +57,7 @@
                         <MudText Typo="Typo.h5" Color="Color.Warning" Class="font-weight-bold">@_summary.PendingOrders</MudText>
                     </div>
                     <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Medium">
-                        <MudIcon Icon="@Icons.Material.Filled.PendingActions" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Outlined.PendingActions" Size="Size.Small" />
                     </MudAvatar>
                 </div>
             </MudPaper>
@@ -70,7 +70,7 @@
                         <MudText Typo="Typo.h5" Color="Color.Success" Class="font-weight-bold">@_summary.DeliveredOrders</MudText>
                     </div>
                     <MudAvatar Color="Color.Success" Variant="Variant.Outlined" Size="Size.Medium">
-                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Outlined.CheckCircle" Size="Size.Small" />
                     </MudAvatar>
                 </div>
             </MudPaper>
@@ -83,22 +83,22 @@
                         <MudText Typo="Typo.h5" Color="Color.Info" Class="font-weight-bold">@_summary.TotalRevenue.ToString("C")</MudText>
                     </div>
                     <MudAvatar Color="Color.Info" Variant="Variant.Outlined" Size="Size.Medium">
-                        <MudIcon Icon="@Icons.Material.Filled.MonetizationOn" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Outlined.MonetizationOn" Size="Size.Small" />
                     </MudAvatar>
                 </div>
             </MudPaper>
         </MudItem>
     </MudGrid>
 
-    <!-- Filters & Chipset Toolbar -->
+    @* DESIGN LANGUAGE: Unified Action Bar — Search debounce + Filter chip cluster *@
     <MudPaper Elevation="1" Class="pa-3 mb-4 rounded-lg">
         <div class="d-flex flex-wrap align-center justify-space-between gap-3">
-            <!-- Search field -->
+            @* Search field *@
             <div style="min-width: 260px; max-width: 360px;" class="flex-grow-1">
-                <MudTextField @bind-Value="_filter.SearchTerm" Placeholder="Search order #, customer, phone..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="false" DebounceInterval="400" OnDebounceIntervalElapsed="LoadDataAsync" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" OnClearButtonClick="LoadDataAsync" />
+                <MudTextField @bind-Value="_filter.SearchTerm" Placeholder="Search order #, customer, phone..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Outlined.Search" Immediate="false" DebounceInterval="400" OnDebounceIntervalElapsed="LoadDataAsync" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" OnClearButtonClick="LoadDataAsync" />
             </div>
 
-            <!-- Status Filter Chips -->
+            @* Status Filter Chips *@
             <div class="d-flex align-center gap-1 flex-wrap">
                 <MudChip T="string" Color="@(_filter.Status == null ? Color.Primary : Color.Default)" Variant="@(_filter.Status == null ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter(null))">
                     All
@@ -122,7 +122,7 @@
         </div>
     </MudPaper>
 
-    <!-- Orders Table (Supports Mobile Receipt Card Mode) -->
+    @* DESIGN LANGUAGE: Responsive Table Container — Orders Table (Receipt card mode on mobile) *@
     <MudTable Items="_orders" Loading="_isLoading" Elevation="1" Class="rounded-lg" Hover="true" Dense="true">
         <HeaderContent>
             <MudTh>Order #</MudTh>
@@ -137,7 +137,7 @@
         <RowTemplate>
             <MudTd DataLabel="Order #">
                 <div class="d-flex align-center gap-1">
-                    <MudIcon Icon="@Icons.Material.Filled.Receipt" Size="Size.Small" Color="Color.Primary" />
+                    <MudIcon Icon="@Icons.Material.Outlined.Receipt" Size="Size.Small" Color="Color.Primary" />
                     <span class="font-weight-bold">@context.OrderNumber</span>
                 </div>
             </MudTd>
@@ -175,24 +175,24 @@
             <MudTd DataLabel="Actions" Style="text-align: right;">
                 <MudButtonGroup Size="Size.Small" Variant="Variant.Text">
                     <MudTooltip Text="Print Commercial Invoice">
-                        <MudIconButton Icon="@Icons.Material.Filled.ReceiptLong" Color="Color.Info" OnClick="@(() => OpenInvoicePrintDialog(context))" />
+                        <MudIconButton Icon="@Icons.Material.Outlined.ReceiptLong" Color="Color.Info" OnClick="@(() => OpenInvoicePrintDialog(context))" />
                     </MudTooltip>
                     <MudTooltip Text="Edit Order Details">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditOrderDialog(context))" />
+                        <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary" OnClick="@(() => OpenEditOrderDialog(context))" />
                     </MudTooltip>
-                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Dense="true" AnchorOrigin="Origin.BottomRight">
-                        <MudMenuItem Icon="@Icons.Material.Filled.LocalShipping" OnClick="@(() => UpdateOrderStatus(context, "Shipped"))">Mark Shipped</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.CheckCircle" OnClick="@(() => UpdateOrderStatus(context, "Delivered"))">Mark Delivered</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Cancel" OnClick="@(() => UpdateOrderStatus(context, "Cancelled"))">Mark Cancelled</MudMenuItem>
+                    <MudMenu Icon="@Icons.Material.Outlined.MoreVert" Dense="true" AnchorOrigin="Origin.BottomRight">
+                        <MudMenuItem Icon="@Icons.Material.Outlined.LocalShipping" OnClick="@(() => UpdateOrderStatus(context, "Shipped"))">Mark Shipped</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Outlined.CheckCircle" OnClick="@(() => UpdateOrderStatus(context, "Delivered"))">Mark Delivered</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Outlined.Cancel" OnClick="@(() => UpdateOrderStatus(context, "Cancelled"))">Mark Cancelled</MudMenuItem>
                         <MudDivider />
-                        <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="@(() => DeleteOrderAsync(context))">Delete Order</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Outlined.DeleteOutline" IconColor="Color.Error" OnClick="@(() => DeleteOrderAsync(context))">Delete Order</MudMenuItem>
                     </MudMenu>
                 </MudButtonGroup>
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
             <div class="d-flex flex-column align-center justify-center py-8 text-secondary">
-                <MudIcon Icon="@Icons.Material.Filled.ShoppingBag" Size="Size.Large" Class="mb-2" />
+                <MudIcon Icon="@Icons.Material.Outlined.ShoppingBag" Size="Size.Large" Class="mb-2" />
                 <MudText Typo="Typo.subtitle1">No orders found.</MudText>
                 <MudText Typo="Typo.caption">Create your first product order using the buttons above.</MudText>
             </div>

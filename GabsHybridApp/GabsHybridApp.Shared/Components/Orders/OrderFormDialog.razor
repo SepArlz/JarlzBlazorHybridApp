@@ -10,16 +10,16 @@
 <MudDialog>
     <TitleContent>
         <MudAppBar Color="Color.Primary" Elevation="0" Dense="true" Class="px-3">
-            <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="mr-2" />
+            <MudIcon Icon="@Icons.Material.Outlined.ShoppingCart" Class="mr-2" />
             <MudText Typo="Typo.h6">@((Order.Id == Guid.Empty || string.IsNullOrWhiteSpace(Order.OrderNumber)) ? "New Product Order" : $"Edit Order #{Order.OrderNumber}")</MudText>
             <MudSpacer />
-            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="Cancel" Size="Size.Small" />
+            <MudIconButton Icon="@Icons.Material.Outlined.Close" Color="Color.Inherit" OnClick="Cancel" Size="Size.Small" />
         </MudAppBar>
     </TitleContent>
     <DialogContent>
         <MudForm @ref="_form" @bind-IsValid="_formIsValid" Class="mt-2">
             <MudGrid>
-                <!-- Customer Details -->
+                @* Customer Details *@
                 <MudItem xs="12">
                     <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="font-weight-bold mb-1">Customer & Destination</MudText>
                     <MudDivider Class="mb-3" />
@@ -62,11 +62,11 @@
                     <MudTextField @bind-Value="Order.ShippingAddress" Label="Shipping Address" Lines="2" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 </MudItem>
 
-                <!-- Order Line Items -->
+                @* Order Line Items *@
                 <MudItem xs="12" Class="mt-3">
                     <div class="d-flex justify-space-between align-center mb-1">
                         <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="font-weight-bold">Order Items</MudText>
-                        <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" OnClick="AddItemRow">
+                        <MudButton StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" OnClick="AddItemRow">
                             Add Line Item
                         </MudButton>
                     </div>
@@ -115,14 +115,14 @@
                                     <MudText Typo="Typo.body2" Class="font-weight-bold">@context.TotalPrice.ToString("C")</MudText>
                                 </MudTd>
                                 <MudTd Class="text-center">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveItemRow(context))" />
+                                    <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveItemRow(context))" />
                                 </MudTd>
                             </RowTemplate>
                         </MudTable>
                     </MudItem>
                 }
 
-                <!-- Financial Calculation Summary -->
+                @* Financial Calculation Summary *@
                 <MudItem xs="12" sm="6" Class="mt-3">
                     <MudTextField @bind-Value="Order.Notes" Label="Order Notes / Memo" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 </MudItem>
