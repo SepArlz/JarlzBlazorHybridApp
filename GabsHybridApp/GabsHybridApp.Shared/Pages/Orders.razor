@@ -98,26 +98,43 @@
                 <MudTextField @bind-Value="_filter.SearchTerm" Placeholder="Search order #, customer, phone..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Outlined.Search" Immediate="false" DebounceInterval="400" OnDebounceIntervalElapsed="LoadDataAsync" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" OnClearButtonClick="LoadDataAsync" />
             </div>
 
-            @* Status Filter Chips *@
-            <div class="d-flex align-center gap-1 flex-wrap">
-                <MudChip T="string" Color="@(_filter.Status == null ? Color.Primary : Color.Default)" Variant="@(_filter.Status == null ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter(null))">
-                    All
-                </MudChip>
-                <MudChip T="string" Color="@(_filter.Status == "Pending" ? Color.Warning : Color.Default)" Variant="@(_filter.Status == "Pending" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Pending"))">
-                    Pending
-                </MudChip>
-                <MudChip T="string" Color="@(_filter.Status == "Processing" ? Color.Info : Color.Default)" Variant="@(_filter.Status == "Processing" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Processing"))">
-                    Processing
-                </MudChip>
-                <MudChip T="string" Color="@(_filter.Status == "Shipped" ? Color.Secondary : Color.Default)" Variant="@(_filter.Status == "Shipped" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Shipped"))">
-                    Shipped
-                </MudChip>
-                <MudChip T="string" Color="@(_filter.Status == "Delivered" ? Color.Success : Color.Default)" Variant="@(_filter.Status == "Delivered" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Delivered"))">
-                    Delivered
-                </MudChip>
-                <MudChip T="string" Color="@(_filter.Status == "Cancelled" ? Color.Error : Color.Default)" Variant="@(_filter.Status == "Cancelled" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Cancelled"))">
-                    Cancelled
-                </MudChip>
+            @* Status Filter Chips & Fulfillment Filter Chips *@
+            <div class="d-flex align-center gap-2 flex-wrap">
+                <div class="d-flex align-center gap-1 flex-wrap">
+                    <MudChip T="string" Color="@(_filter.Status == null ? Color.Primary : Color.Default)" Variant="@(_filter.Status == null ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter(null))">
+                        All Status
+                    </MudChip>
+                    <MudChip T="string" Color="@(_filter.Status == "Pending" ? Color.Warning : Color.Default)" Variant="@(_filter.Status == "Pending" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Pending"))">
+                        Pending
+                    </MudChip>
+                    <MudChip T="string" Color="@(_filter.Status == "Processing" ? Color.Info : Color.Default)" Variant="@(_filter.Status == "Processing" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Processing"))">
+                        Processing
+                    </MudChip>
+                    <MudChip T="string" Color="@(_filter.Status == "Shipped" ? Color.Secondary : Color.Default)" Variant="@(_filter.Status == "Shipped" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Shipped"))">
+                        Shipped
+                    </MudChip>
+                    <MudChip T="string" Color="@(_filter.Status == "Delivered" ? Color.Success : Color.Default)" Variant="@(_filter.Status == "Delivered" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Delivered"))">
+                        Delivered
+                    </MudChip>
+                    <MudChip T="string" Color="@(_filter.Status == "Finished" ? Color.Success : Color.Default)" Variant="@(_filter.Status == "Finished" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Finished"))">
+                        Finished
+                    </MudChip>
+                    <MudChip T="string" Color="@(_filter.Status == "Cancelled" ? Color.Error : Color.Default)" Variant="@(_filter.Status == "Cancelled" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetStatusFilter("Cancelled"))">
+                        Cancelled
+                    </MudChip>
+                </div>
+                <MudDivider Vertical="true" FlexItem="true" Class="d-none d-sm-flex my-1" />
+                <div class="d-flex align-center gap-1 flex-wrap">
+                    <MudChip T="string" Color="@(_filter.FulfillmentType == null ? Color.Primary : Color.Default)" Variant="@(_filter.FulfillmentType == null ? Variant.Filled : Variant.Outlined)" Size="Size.Small" OnClick="@(() => SetFulfillmentFilter(null))">
+                        All Modes
+                    </MudChip>
+                    <MudChip T="string" Color="@(_filter.FulfillmentType == "Delivery" ? Color.Primary : Color.Default)" Variant="@(_filter.FulfillmentType == "Delivery" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" Icon="@Icons.Material.Outlined.LocalShipping" OnClick="@(() => SetFulfillmentFilter("Delivery"))">
+                        Delivery
+                    </MudChip>
+                    <MudChip T="string" Color="@(_filter.FulfillmentType == "Branch" ? Color.Info : Color.Default)" Variant="@(_filter.FulfillmentType == "Branch" ? Variant.Filled : Variant.Outlined)" Size="Size.Small" Icon="@Icons.Material.Outlined.Storefront" OnClick="@(() => SetFulfillmentFilter("Branch"))">
+                        Branch / Face-to-Face
+                    </MudChip>
+                </div>
             </div>
         </div>
     </MudPaper>
@@ -127,7 +144,7 @@
         <HeaderContent>
             <MudTh>Order #</MudTh>
             <MudTh>Date</MudTh>
-            <MudTh>Customer</MudTh>
+            <MudTh>Customer &amp; Fulfillment</MudTh>
             <MudTh>Status</MudTh>
             <MudTh>Payment</MudTh>
             <MudTh Style="text-align: center;">Items</MudTh>
@@ -144,9 +161,23 @@
             <MudTd DataLabel="Date">
                 @context.OrderDateUtc.ToLocalTime().ToString("MMM dd, yyyy HH:mm")
             </MudTd>
-            <MudTd DataLabel="Customer">
+            <MudTd DataLabel="Customer &amp; Fulfillment">
                 <div>
                     <div class="font-weight-bold">@context.CustomerName</div>
+                    <div class="d-flex align-center gap-1 mt-1">
+                        @if (context.IsBranchPickup)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined" Class="pa-1" Style="font-size: 0.72rem;">
+                                Branch (Face-to-Face)
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Class="pa-1" Style="font-size: 0.72rem;">
+                                Delivery
+                            </MudChip>
+                        }
+                    </div>
                     @if (!string.IsNullOrWhiteSpace(context.CustomerPhone))
                     {
                         <div class="mud-text-secondary" style="font-size: 0.75rem;">@context.CustomerPhone</div>
@@ -239,12 +270,19 @@
         await LoadDataAsync();
     }
 
+    private async Task SetFulfillmentFilter(string? mode)
+    {
+        _filter.FulfillmentType = mode;
+        await LoadDataAsync();
+    }
+
     private static Color GetStatusColor(string status) => status switch
     {
         "Pending" => Color.Warning,
         "Processing" => Color.Info,
         "Shipped" => Color.Secondary,
         "Delivered" => Color.Success,
+        "Finished" => Color.Success,
         "Cancelled" => Color.Error,
         _ => Color.Default
     };
@@ -253,7 +291,8 @@
     {
         var parameters = new DialogParameters<OrderFormDialog>
         {
-            { x => x.Order, new Order { Id = Guid.CreateVersion7(), OrderDateUtc = DateTime.UtcNow } }
+            { x => x.Order, new Order { Id = Guid.CreateVersion7(), OrderDateUtc = DateTime.UtcNow } },
+            { x => x.IsEditMode, false }
         };
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
         var dialog = await DialogService.ShowAsync<OrderFormDialog>("New Product Order", parameters, options);
@@ -268,7 +307,8 @@
     {
         var parameters = new DialogParameters<OrderFormDialog>
         {
-            { x => x.Order, order }
+            { x => x.Order, order },
+            { x => x.IsEditMode, true }
         };
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
         var dialog = await DialogService.ShowAsync<OrderFormDialog>($"Edit Order #{order.OrderNumber}", parameters, options);

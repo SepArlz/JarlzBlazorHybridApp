@@ -1,0 +1,210 @@
+@using GabsHybridApp.Shared.Models
+@using GabsHybridApp.Shared.Services
+@using MudBlazor
+@inject IProductService ProductService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudAppBar Color="Color.Primary" Elevation="0" Dense="true" Class="px-3">
+            <MudIcon Icon="@Icons.Material.Outlined.Inventory2" Class="mr-2" />
+            <MudText Typo="Typo.h6">@(IsEditMode ? $"Edit Product #{_product.Id}" : "Add New Product")</MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Outlined.Close" Color="Color.Inherit" OnClick="Cancel" Size="Size.Small" />
+        </MudAppBar>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_formIsValid" Class="mt-2">
+            <MudGrid>
+                @* System ID Banner *@
+                <MudItem xs="12">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-3 d-flex align-center justify-space-between rounded-lg bg-light">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Outlined.Pin" Color="Color.Primary" />
+                            <div>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">System Product ID</MudText>
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold" Color="Color.Primary">
+                                    #@(IsEditMode ? _product.Id.ToString() : (_nextId > 0 ? _nextId.ToString() : "Generating..."))
+                                </MudText>
+                            </div>
+                        </div>
+                        <MudChip T="string" Color="@(IsEditMode ? Color.Info : Color.Success)" Size="Size.Small" Variant="Variant.Outlined">
+                            @(IsEditMode ? "Existing Record" : "Auto-Assigned")
+                        </MudChip>
+                    </MudPaper>
+                </MudItem>
+
+                @* Product Name *@
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_product.Name"
+                                  Label="Product Name"
+                                  Placeholder="e.g. Shell Advance AX7 10W-40"
+                                  Required="true"
+                                  RequiredError="Product name is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  AutoFocus="true" />
+                </MudItem>
+
+                @* Unit Price *@
+                <MudItem xs="12" sm="6">
+                    <MudNumericField T="decimal"
+                                     @bind-Value="_product.UnitPrice"
+                                     Label="Unit Price"
+                                     Placeholder="0.00"
+                                     Min="0.01m"
+                                     Required="true"
+                                     RequiredError="Unit price is required"
+                                     Format="0.00"
+                                     HideSpinButtons="false"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+
+                @* Packaging Unit *@
+                <MudItem xs="12" sm="6">
+                    <MudAutocomplete T="string"
+                                     @bind-Value="_product.Unit"
+                                     Label="Packaging Unit"
+                                     Placeholder="e.g. bottle, box, pack, piece"
+                                     SearchFunc="@SearchUnitSuggestions"
+                                     CoerceValue="true"
+                                     CoerceText="true"
+                                     ResetValueOnEmptyText="false"
+                                     Required="true"
+                                     RequiredError="Packaging unit is required"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+
+                @* Description / Specifications *@
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_product.Description"
+                                  Label="Description / Specifications"
+                                  Placeholder="Optional notes, size, or details"
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        @* DESIGN LANGUAGE: Sticky Modal Footer — Cancel and Save action buttons *@
+        <div class="d-flex align-center justify-end gap-2 w-100 pa-3 border-t-1">
+            <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Cancel">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="@(!_formIsValid || _isSaving)"
+                       OnClick="SaveProductAsync">
+                @(_isSaving ? "Saving..." : (IsEditMode ? "Save Changes" : "Save Product"))
+            </MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public Product? ProductToEdit { get; set; }
+
+    [Parameter]
+    public List<string> ExistingUnits { get; set; } = new();
+
+    private bool IsEditMode => ProductToEdit != null && ProductToEdit.Id > 0;
+
+    private MudForm? _form;
+    private bool _formIsValid;
+    private bool _isSaving;
+    private int _nextId;
+
+    private Product _product = new()
+    {
+        UnitPrice = 0.00m,
+        Unit = "piece"
+    };
+
+    private readonly string[] _commonUnits = new[] { "bottle", "box", "pack", "can", "jar", "piece", "set", "liter", "tube", "bar" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEditMode)
+        {
+            _product = new Product
+            {
+                Id = ProductToEdit!.Id,
+                Name = ProductToEdit.Name,
+                UnitPrice = ProductToEdit.UnitPrice,
+                Unit = ProductToEdit.Unit,
+                Description = ProductToEdit.Description,
+                PictureFilename = ProductToEdit.PictureFilename
+            };
+        }
+        else
+        {
+            try
+            {
+                _nextId = await ProductService.GetNextProductIdAsync();
+            }
+            catch
+            {
+                _nextId = 1;
+            }
+        }
+    }
+
+    private Task<IEnumerable<string>> SearchUnitSuggestions(string value, CancellationToken ct)
+    {
+        var allUnits = ExistingUnits
+            .Concat(_commonUnits)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(u => u);
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return Task.FromResult(allUnits.AsEnumerable());
+        }
+
+        return Task.FromResult(allUnits.Where(u => u.Contains(value, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private async Task SaveProductAsync()
+    {
+        if (_form != null)
+        {
+            await _form.ValidateAsync();
+            if (!_form.IsValid) return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            if (IsEditMode)
+            {
+                var updated = await ProductService.UpdateProductAsync(_product);
+                Snackbar.Add($"Product '{updated.Name}' updated successfully.", Severity.Success);
+                MudDialog?.Close(DialogResult.Ok(updated));
+            }
+            else
+            {
+                var created = await ProductService.CreateProductAsync(_product);
+                Snackbar.Add($"Product '{created.Name}' added successfully (ID #{created.Id}).", Severity.Success);
+                MudDialog?.Close(DialogResult.Ok(created));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to save product: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void Cancel() => MudDialog?.Cancel();
+}

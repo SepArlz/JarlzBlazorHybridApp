@@ -1,20 +1,65 @@
-﻿@page "/counter"
+@page "/counter"
 
 @inherits BlazorStateComponent
 @using BlazorState
 @using GabsHybridApp.Shared.States
 
-<PageTitle>Counter</PageTitle>
+<PageTitle>State Management Counter - Jarlz MotoHub</PageTitle>
 
-<h1>Counter</h1>
+@* DESIGN LANGUAGE: Page Hero Header — Operational title & icon badge *@
+<MudPaper Elevation="0" Class="pa-4 mb-4 rounded-lg bg-transparent">
+    <div class="d-flex align-center gap-3">
+        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+            <MudIcon Icon="@Icons.Material.Filled.Calculate" Size="Size.Large" />
+        </MudAvatar>
+        <div>
+            <MudText Typo="Typo.h5" Color="Color.Primary"><b>State Telemetry Counter</b></MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                Demonstrates BlazorState MediatR pipeline state store and local component state
+            </MudText>
+        </div>
+    </div>
+</MudPaper>
 
-<p role="status">Current count: @currentCount</p>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="Increment">Click me</MudButton>
+<MudGrid>
+    @* Global Store Counter *@
+    <MudItem xs="12" sm="6">
+        <MudPaper Elevation="1" Outlined="true" Class="pa-5 rounded-lg d-flex flex-column justify-space-between" Style="min-height: 180px; border-top: 3px solid var(--mud-palette-primary);">
+            <div>
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">BlazorState Store</MudText>
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">MediatR</MudChip>
+                </div>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Global application state store managed via actions.</MudText>
+                <div class="my-4">
+                    <MudText Typo="Typo.h3" Color="Color.Primary" Class="font-weight-bold">@currentCount</MudText>
+                </div>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="Increment">
+                Increment Store (+5)
+            </MudButton>
+        </MudPaper>
+    </MudItem>
 
-<p>&nbsp;</p>
-
-<p role="status">Local count: @localCount</p>
-<MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="IncrementLocal">Click me</MudButton>
+    @* Local Component Counter *@
+    <MudItem xs="12" sm="6">
+        <MudPaper Elevation="1" Outlined="true" Class="pa-5 rounded-lg d-flex flex-column justify-space-between" Style="min-height: 180px; border-top: 3px solid var(--mud-palette-secondary);">
+            <div>
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Local Component State</MudText>
+                    <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Variant="Variant.Outlined">Scoped</MudChip>
+                </div>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Transient state scoped strictly to this Blazor view.</MudText>
+                <div class="my-4">
+                    <MudText Typo="Typo.h3" Color="Color.Secondary" Class="font-weight-bold">@localCount</MudText>
+                </div>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add" OnClick="IncrementLocal">
+                Increment Local (+1)
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
     CounterState CounterState => GetState<CounterState>();

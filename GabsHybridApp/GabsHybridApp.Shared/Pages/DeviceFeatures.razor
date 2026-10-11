@@ -82,11 +82,27 @@
     </style>
 }
 
-<h2>Device Features</h2>
-
-<MudText Typo="Typo.body2">
-    Current theme: @(IsDarkMode ? "Dark" : "Light")
-</MudText>
+@* DESIGN LANGUAGE: Page Hero Header — Operational title & icon badge *@
+<MudPaper Elevation="0" Class="pa-4 mb-3 rounded-lg bg-transparent">
+    <div class="d-flex justify-space-between align-center flex-wrap gap-2">
+        <div class="d-flex align-center gap-3">
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Large" />
+            </MudAvatar>
+            <div>
+                <MudText Typo="Typo.h5" Color="Color.Primary"><b>Hardware &amp; Sensor Telemetry</b></MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    Native device capabilities, diagnostic probes, and hardware telemetry for Web &amp; MAUI
+                </MudText>
+            </div>
+        </div>
+        <div>
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
+                Theme: @(IsDarkMode ? "Dark" : "Light")
+            </MudChip>
+        </div>
+    </div>
+</MudPaper>
 
 <MudChipSet T="DeviceFeature"
             id="device-features-chipset"

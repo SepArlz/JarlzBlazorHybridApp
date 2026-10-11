@@ -10,6 +10,7 @@ public class OrderFilterDto
     public string? PaymentStatus { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
+    public string? FulfillmentType { get; set; } // "Delivery", "Branch", or null for All
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 10;
 }

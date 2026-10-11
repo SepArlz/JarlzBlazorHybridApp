@@ -29,6 +29,7 @@ public static class DependencyInjection
         // App services that are host-agnostic
         services.AddScoped<UserService>();
         services.AddScoped<ProductSyncService>();
+        services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IAppThemeService, DefaultAppThemeService>();
         services.AddSingleton<IDeviceIdProvider, DefaultDeviceIdProvider>();

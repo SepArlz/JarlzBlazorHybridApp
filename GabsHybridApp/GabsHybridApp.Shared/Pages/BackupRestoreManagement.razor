@@ -20,7 +20,7 @@
 
 <PageTitle>Database Backup &amp; Recovery</PageTitle>
 
-<!-- Top Hero Header -->
+@* Top Hero Header *@
 <MudPaper Elevation="3" Class="pa-4 mb-6 rounded-lg primary-hero-paper">
     <div class="d-flex justify-space-between align-center flex-wrap gap-3">
         <div class="d-flex align-center gap-3">
@@ -42,9 +42,9 @@
     </div>
 </MudPaper>
 
-<!-- Actions Row: Generate Backup & Restore Cards -->
+@* Actions Row: Generate Backup & Restore Cards *@
 <div class="d-flex flex-wrap gap-4 mb-4">
-    <!-- Generate Backup Card -->
+    @* Generate Backup Card *@
     <MudPaper Elevation="1" Outlined="true" Class="pa-4 flex-grow-1 rounded-lg">
         <div class="d-flex align-center gap-2 mb-2">
             <MudIcon Icon="@Icons.Material.Filled.Archive" Color="Color.Primary" />
@@ -75,7 +75,7 @@
         </div>
     </MudPaper>
 
-    <!-- Upload & Restore Card -->
+    @* Upload & Restore Card *@
     <MudPaper Elevation="1" Outlined="true" Class="pa-4 flex-grow-1 rounded-lg">
         <div class="d-flex align-center gap-2 mb-2">
             <MudIcon Icon="@Icons.Material.Filled.RestorePage" Color="Color.Error" />
@@ -96,7 +96,7 @@
     </MudPaper>
 </div>
 
-<!-- Operation Progress Status -->
+@* Operation Progress Status *@
 @if (_isOperating)
 {
     <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-4 rounded-lg">
@@ -110,7 +110,7 @@
     </MudAlert>
 }
 
-<!-- Backup Archive History Table -->
+@* Backup Archive History Table *@
 <MudTable Items="_backupHistory" Loading="_isLoading" Elevation="1" Class="rounded-lg" Hover="true" Dense="true">
     <ToolBarContent>
         <MudIcon Icon="@Icons.Material.Filled.History" Class="mr-2" />

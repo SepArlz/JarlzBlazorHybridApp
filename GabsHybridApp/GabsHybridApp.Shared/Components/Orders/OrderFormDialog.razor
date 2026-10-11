@@ -11,19 +11,58 @@
     <TitleContent>
         <MudAppBar Color="Color.Primary" Elevation="0" Dense="true" Class="px-3">
             <MudIcon Icon="@Icons.Material.Outlined.ShoppingCart" Class="mr-2" />
-            <MudText Typo="Typo.h6">@((Order.Id == Guid.Empty || string.IsNullOrWhiteSpace(Order.OrderNumber)) ? "New Product Order" : $"Edit Order #{Order.OrderNumber}")</MudText>
+            <MudText Typo="Typo.h6">@(IsEditMode ? $"Edit Order #{Order.OrderNumber}" : "New Product Order")</MudText>
             <MudSpacer />
             <MudIconButton Icon="@Icons.Material.Outlined.Close" Color="Color.Inherit" OnClick="Cancel" Size="Size.Small" />
         </MudAppBar>
     </TitleContent>
     <DialogContent>
-        <MudForm @ref="_form" @bind-IsValid="_formIsValid" Class="mt-2">
+        <MudForm @ref="_form" @bind-IsValid="_formIsValid" Class="mt-1">
             <MudGrid>
-                @* Customer Details *@
-                <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="font-weight-bold mb-1">Customer & Destination</MudText>
-                    <MudDivider Class="mb-3" />
+                @* DESIGN LANGUAGE: Highlighted Customer & Destination Tile Banner *@
+                <MudItem xs="12" Class="mt-3 mb-2">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-3 rounded-lg d-flex align-center justify-space-between flex-wrap gap-2" Style="background: rgba(0, 229, 153, 0.08); border-left: 5px solid var(--mud-palette-primary);">
+                        <div class="d-flex align-center gap-3">
+                            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Medium">
+                                <MudIcon Icon="@Icons.Material.Filled.PersonPinCircle" Size="Size.Small" />
+                            </MudAvatar>
+                            <div>
+                                <MudText Typo="Typo.h6" Class="font-weight-bold" Color="Color.Primary" Style="letter-spacing: -0.02em; line-height: 1.2;">
+                                    Customer &amp; Destination
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    Recipient contact info, fulfillment mode &amp; branch store assignment
+                                </MudText>
+                            </div>
+                        </div>
+                        <MudChip T="string" Color="@(_isFaceToFace ? Color.Info : Color.Primary)" Variant="Variant.Filled" Size="Size.Small" Icon="@(_isFaceToFace ? Icons.Material.Outlined.Storefront : Icons.Material.Outlined.LocalShipping)">
+                            @(_isFaceToFace ? "In-Store / Face-to-Face" : "Delivery Order")
+                        </MudChip>
+                    </MudPaper>
                 </MudItem>
+
+                @* Fulfillment Choice: Delivery vs Face-to-Face in Shop Branch *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-weight-bold mb-1 d-block">Fulfillment &amp; Transaction Method</MudText>
+                    <div class="d-flex align-center gap-2 flex-wrap">
+                        <MudButton Variant="@(!_isFaceToFace ? Variant.Filled : Variant.Outlined)"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Outlined.LocalShipping"
+                                   Size="Size.Small"
+                                   OnClick="@(() => OnFulfillmentModeChanged(false))">
+                            Door-to-Door Delivery
+                        </MudButton>
+                        <MudButton Variant="@(_isFaceToFace ? Variant.Filled : Variant.Outlined)"
+                                   Color="Color.Info"
+                                   StartIcon="@Icons.Material.Outlined.Storefront"
+                                   Size="Size.Small"
+                                   OnClick="@(() => OnFulfillmentModeChanged(true))">
+                            Branch / Face-to-Face Transaction
+                        </MudButton>
+                    </div>
+                </MudItem>
+
+                @* Customer Details Inputs *@
                 <MudItem xs="12" sm="6">
                     <MudTextField @bind-Value="Order.CustomerName" Label="Customer Full Name" Required="true" RequiredError="Customer name is required" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 </MudItem>
@@ -35,16 +74,27 @@
                 </MudItem>
                 <MudItem xs="12" sm="6">
                     <MudSelect @bind-Value="Order.Status" Label="Order Status" Variant="Variant.Outlined" Margin="Margin.Dense">
-                        <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
-                        <MudSelectItem Value="@("Processing")">Processing</MudSelectItem>
-                        <MudSelectItem Value="@("Shipped")">Shipped</MudSelectItem>
-                        <MudSelectItem Value="@("Delivered")">Delivered</MudSelectItem>
-                        <MudSelectItem Value="@("Cancelled")">Cancelled</MudSelectItem>
+                        @if (_isFaceToFace)
+                        {
+                            @* Face-to-Face Branch Transaction Status Choices *@
+                            <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                            <MudSelectItem Value="@("Finished")">Finished</MudSelectItem>
+                        }
+                        else
+                        {
+                            @* Delivery Orders Full Status Choices *@
+                            <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                            <MudSelectItem Value="@("Processing")">Processing</MudSelectItem>
+                            <MudSelectItem Value="@("Shipped")">Shipped</MudSelectItem>
+                            <MudSelectItem Value="@("Delivered")">Delivered</MudSelectItem>
+                            <MudSelectItem Value="@("Cancelled")">Cancelled</MudSelectItem>
+                        }
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12" sm="6">
                     <MudSelect @bind-Value="Order.PaymentMethod" Label="Payment Method" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem Value="@("CashOnDelivery")">Cash on Delivery (COD)</MudSelectItem>
+                        <MudSelectItem Value="@("Cash")">Cash (Over-the-Counter)</MudSelectItem>
                         <MudSelectItem Value="@("CreditCard")">Credit / Debit Card</MudSelectItem>
                         <MudSelectItem Value="@("GCash")">GCash / E-Wallet</MudSelectItem>
                         <MudSelectItem Value="@("BankTransfer")">Bank Transfer</MudSelectItem>
@@ -58,9 +108,37 @@
                         <MudSelectItem Value="@("Failed")">Failed</MudSelectItem>
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="12">
-                    <MudTextField @bind-Value="Order.ShippingAddress" Label="Shipping Address" Lines="2" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                </MudItem>
+
+                @* Address / Branch Input *@
+                @if (_isFaceToFace)
+                {
+                    <MudItem xs="12">
+                        <MudSelect T="string"
+                                   Label="Shop Branch Location (Face-to-Face)"
+                                   Value="_selectedBranch"
+                                   ValueChanged="OnBranchSelected"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   HelperText="Order transaction conducted over the counter inside this shop branch. Shipping fee is waived.">
+                            @foreach (var branch in _branchOptions)
+                            {
+                                <MudSelectItem Value="@branch">@branch</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="Order.ShippingAddress"
+                                      Label="Delivery Shipping Address"
+                                      Lines="2"
+                                      Required="true"
+                                      RequiredError="Shipping address is required for delivery"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+                }
 
                 @* Order Line Items *@
                 <MudItem xs="12" Class="mt-3">
@@ -138,7 +216,14 @@
                         </div>
                         <div class="d-flex justify-space-between align-center mb-1">
                             <MudText Typo="Typo.body2" Color="Color.Secondary">Shipping Fee:</MudText>
-                            <MudNumericField T="decimal" Value="@Order.ShippingFee" ValueChanged="@(v => { Order.ShippingFee = v; Recalculate(); })" Format="N2" Min="0" Margin="Margin.Dense" Variant="Variant.Text" Style="max-width: 110px; text-align: right;" />
+                            @if (_isFaceToFace)
+                            {
+                                <span class="mud-text-secondary" style="font-size: 0.85rem;">Waived ($0.00)</span>
+                            }
+                            else
+                            {
+                                <MudNumericField T="decimal" Value="@Order.ShippingFee" ValueChanged="@(v => { Order.ShippingFee = v; Recalculate(); })" Format="N2" Min="0" Margin="Margin.Dense" Variant="Variant.Text" Style="max-width: 110px; text-align: right;" />
+                            }
                         </div>
                         <MudDivider Class="my-2" />
                         <div class="d-flex justify-space-between align-center">
@@ -162,16 +247,40 @@
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter] public Order Order { get; set; } = new();
+    [Parameter] public bool IsEditMode { get; set; }
 
     private MudForm? _form;
     private bool _formIsValid;
     private bool _isSaving;
     private List<Product> _availableProducts = new();
 
+    private bool _isFaceToFace = false;
+    private string _selectedBranch = "Main Shop - Downtown Hub";
+    private readonly string[] _branchOptions = new[]
+    {
+        "Main Shop - Downtown Hub",
+        "North Service Center Branch",
+        "South Moto Parts Branch",
+        "Over-the-Counter Pickup"
+    };
+
     protected override async Task OnInitializedAsync()
     {
         await using var db = await DbFactory.CreateDbContextAsync();
         _availableProducts = await db.Products.AsNoTracking().OrderBy(p => p.Name).ToListAsync();
+
+        if (Order.IsBranchPickup)
+        {
+            _isFaceToFace = true;
+            var cleanBranch = Order.ShippingAddress?
+                .Replace("Branch:", "")
+                .Replace("(Face-to-Face)", "")
+                .Trim();
+            if (!string.IsNullOrWhiteSpace(cleanBranch))
+            {
+                _selectedBranch = cleanBranch;
+            }
+        }
 
         if (Order.Items.Count == 0 && _availableProducts.Count > 0)
         {
@@ -180,6 +289,45 @@
         else
         {
             Recalculate();
+        }
+    }
+
+    private void OnFulfillmentModeChanged(bool isFaceToFace)
+    {
+        _isFaceToFace = isFaceToFace;
+        if (_isFaceToFace)
+        {
+            Order.ShippingFee = 0m;
+            Order.ShippingAddress = $"Branch: {_selectedBranch} (Face-to-Face)";
+            if (Order.PaymentMethod == "CashOnDelivery")
+            {
+                Order.PaymentMethod = "Cash";
+            }
+            if (Order.Status != "Pending" && Order.Status != "Finished")
+            {
+                Order.Status = "Finished";
+            }
+        }
+        else
+        {
+            if (Order.ShippingAddress?.Contains("Branch:", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                Order.ShippingAddress = string.Empty;
+            }
+            if (Order.Status == "Finished")
+            {
+                Order.Status = "Delivered";
+            }
+        }
+        Recalculate();
+    }
+
+    private void OnBranchSelected(string branch)
+    {
+        _selectedBranch = branch;
+        if (_isFaceToFace)
+        {
+            Order.ShippingAddress = $"Branch: {_selectedBranch} (Face-to-Face)";
         }
     }
 
@@ -227,7 +375,7 @@
         }
 
         Order.SubTotal = Order.Items.Sum(i => i.TotalPrice);
-        Order.TotalAmount = Math.Max(0, Order.SubTotal - Order.DiscountAmount + Order.TaxAmount + Order.ShippingFee);
+        Order.TotalAmount = Math.Max(0, Order.SubTotal - Order.DiscountAmount + Order.TaxAmount + (_isFaceToFace ? 0m : Order.ShippingFee));
     }
 
     private async Task SaveOrder()
@@ -238,12 +386,18 @@
             if (!_formIsValid || Order.Items.Count == 0) return;
         }
 
+        if (_isFaceToFace)
+        {
+            Order.ShippingFee = 0m;
+            Order.ShippingAddress = $"Branch: {_selectedBranch} (Face-to-Face)";
+        }
+
         _isSaving = true;
         try
         {
             Recalculate();
 
-            if (Order.Id == Guid.Empty)
+            if (!IsEditMode && string.IsNullOrWhiteSpace(Order.OrderNumber))
             {
                 await OrderService.CreateOrderAsync(Order);
                 Snackbar.Add($"Order #{Order.OrderNumber} created successfully!", Severity.Success);

@@ -315,16 +315,18 @@
     box-shadow: 0 4px 20px rgba(225, 29, 72, 0.3) !important;
 }
 
-/* Primary Dialog AppBars (e.g. Book Advance Ambulance Transport) */
+/* Primary Dialog AppBars (Neon Emerald Console Theme) */
 .dark-theme .mud-dialog .mud-appbar.mud-theme-primary,
 .dark-theme .mud-dialog .mud-appbar.mud-appbar-primary,
 .dark-theme .mud-dialog .mud-appbar[class*="primary"],
 .mud-theme-dark .mud-dialog .mud-appbar.mud-theme-primary,
 .mud-theme-dark .mud-dialog .mud-appbar[class*="primary"],
-[data-theme="dark"] .mud-dialog .mud-appbar[class*="primary"] {
-    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #3b82f6 100%) !important;
-    border-bottom: 1px solid rgba(96, 165, 250, 0.3) !important;
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3) !important;
+[data-theme="dark"] .mud-dialog .mud-appbar[class*="primary"],
+.mud-dialog .mud-appbar.mud-primary,
+.mud-dialog-title .mud-appbar.mud-primary {
+    background: linear-gradient(135deg, #042f2e 0%, #065f46 50%, #00e599 100%) !important;
+    border-bottom: 1px solid rgba(0, 229, 153, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(0, 229, 153, 0.25) !important;
 }
 
 /* Secondary Dialog AppBars */

@@ -9,7 +9,8 @@
 <style>
     .wallet-action-card {
         border: 1px solid var(--mud-palette-lines-default) !important;
-        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+        background: var(--mud-palette-surface) !important;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
         position: relative;
         overflow: hidden;
         height: 100%;
@@ -17,8 +18,7 @@
     }
     .wallet-action-card:hover {
         transform: translateY(-4px);
-        box-shadow: var(--mud-elevation-6) !important;
-        border-color: var(--mud-palette-primary) !important;
+        box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.65) !important;
     }
     .wallet-action-card:active {
         transform: translateY(-1px);
@@ -29,9 +29,11 @@
         font-weight: 600;
     }
 
-    /* Dark Mode Hero Gradient Effects */
+    /* Subdued Neutral Base with Dynamic Accent Highlights on Hover */
     .dark-theme .wallet-action-card,
     .mud-theme-dark .wallet-action-card {
+        background: linear-gradient(145deg, #182234 0%, #0d1522 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
         position: relative;
         overflow: hidden;
     }
@@ -45,75 +47,86 @@
         right: 0;
         height: 3px;
         z-index: 1;
+        opacity: 0;
+        transition: opacity 0.25s ease;
     }
 
-    /* 1. Products & Orders - Blue Hero Gradient */
-    .dark-theme .wallet-card-primary,
-    .mud-theme-dark .wallet-card-primary {
-        background: radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.22) 0%, transparent 65%),
-                    linear-gradient(145deg, #1e293b 0%, #0f172a 100%) !important;
-        border: 1px solid rgba(59, 130, 246, 0.35) !important;
-        box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 0 15px rgba(37, 99, 235, 0.12) !important;
+    .dark-theme .wallet-action-card:hover::before,
+    .mud-theme-dark .wallet-action-card:hover::before {
+        opacity: 1;
     }
+
+    /* 1. Products & Orders - Hover Highlight */
     .dark-theme .wallet-card-primary::before,
     .mud-theme-dark .wallet-card-primary::before {
-        background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #818cf8 100%);
+        background: linear-gradient(90deg, #00e599 0%, #10b981 50%, #14b8a6 100%);
+    }
+    .dark-theme .wallet-card-primary:hover,
+    .mud-theme-dark .wallet-card-primary:hover {
+        background: radial-gradient(circle at 15% 15%, rgba(0, 229, 153, 0.16) 0%, transparent 68%),
+                    linear-gradient(145deg, #182234 0%, #0d1522 100%) !important;
+        border: 1px solid rgba(0, 229, 153, 0.55) !important;
+        box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.65), 0 0 16px rgba(0, 229, 153, 0.15) !important;
     }
 
-    /* 2. Device Features - Cyan / Sky Hero Gradient */
-    .dark-theme .wallet-card-info,
-    .mud-theme-dark .wallet-card-info {
-        background: radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.22) 0%, transparent 65%),
-                    linear-gradient(145deg, #1e293b 0%, #0f172a 100%) !important;
-        border: 1px solid rgba(6, 182, 212, 0.35) !important;
-        box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 0 15px rgba(6, 182, 212, 0.12) !important;
-    }
+    /* 2. Device Features - Hover Highlight */
     .dark-theme .wallet-card-info::before,
     .mud-theme-dark .wallet-card-info::before {
         background: linear-gradient(90deg, #06b6d4 0%, #38bdf8 50%, #67e8f9 100%);
     }
-
-    /* 3. Component Showcase - Amber / Gold Hero Gradient */
-    .dark-theme .wallet-card-warning,
-    .mud-theme-dark .wallet-card-warning {
-        background: radial-gradient(circle at 15% 15%, rgba(245, 158, 11, 0.22) 0%, transparent 65%),
-                    linear-gradient(145deg, #1e293b 0%, #0f172a 100%) !important;
-        border: 1px solid rgba(245, 158, 11, 0.35) !important;
-        box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 0 15px rgba(245, 158, 11, 0.12) !important;
+    .dark-theme .wallet-card-info:hover,
+    .mud-theme-dark .wallet-card-info:hover {
+        background: radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.16) 0%, transparent 68%),
+                    linear-gradient(145deg, #182234 0%, #0d1522 100%) !important;
+        border: 1px solid rgba(6, 182, 212, 0.55) !important;
+        box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.65), 0 0 16px rgba(6, 182, 212, 0.15) !important;
     }
+
+    /* 3. Component Showcase - Hover Highlight */
     .dark-theme .wallet-card-warning::before,
     .mud-theme-dark .wallet-card-warning::before {
         background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%);
     }
-
-    /* 4. Backup & Maintenance - Emerald / Green Hero Gradient */
-    .dark-theme .wallet-card-success,
-    .mud-theme-dark .wallet-card-success {
-        background: radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.22) 0%, transparent 65%),
-                    linear-gradient(145deg, #1e293b 0%, #0f172a 100%) !important;
-        border: 1px solid rgba(16, 185, 129, 0.35) !important;
-        box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 0 15px rgba(16, 185, 129, 0.12) !important;
+    .dark-theme .wallet-card-warning:hover,
+    .mud-theme-dark .wallet-card-warning:hover {
+        background: radial-gradient(circle at 15% 15%, rgba(245, 158, 11, 0.16) 0%, transparent 68%),
+                    linear-gradient(145deg, #182234 0%, #0d1522 100%) !important;
+        border: 1px solid rgba(245, 158, 11, 0.55) !important;
+        box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.65), 0 0 16px rgba(245, 158, 11, 0.15) !important;
     }
+
+    /* 4. Backup & Maintenance - Hover Highlight */
     .dark-theme .wallet-card-success::before,
     .mud-theme-dark .wallet-card-success::before {
         background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
     }
-
-    /* Luminous Avatar Glow in Dark Mode */
-    .dark-theme .wallet-card-primary .mud-avatar,
-    .mud-theme-dark .wallet-card-primary .mud-avatar {
-        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45) !important;
+    .dark-theme .wallet-card-success:hover,
+    .mud-theme-dark .wallet-card-success:hover {
+        background: radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.16) 0%, transparent 68%),
+                    linear-gradient(145deg, #182234 0%, #0d1522 100%) !important;
+        border: 1px solid rgba(16, 185, 129, 0.55) !important;
+        box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.65), 0 0 16px rgba(16, 185, 129, 0.15) !important;
     }
-    .dark-theme .wallet-card-info .mud-avatar,
-    .mud-theme-dark .wallet-card-info .mud-avatar {
+
+    /* Avatar Glow on Hover Only */
+    .dark-theme .wallet-action-card .mud-avatar,
+    .mud-theme-dark .wallet-action-card .mud-avatar {
+        transition: box-shadow 0.25s ease, transform 0.25s ease;
+    }
+    .dark-theme .wallet-card-primary:hover .mud-avatar,
+    .mud-theme-dark .wallet-card-primary:hover .mud-avatar {
+        box-shadow: 0 4px 14px rgba(0, 229, 153, 0.45) !important;
+    }
+    .dark-theme .wallet-card-info:hover .mud-avatar,
+    .mud-theme-dark .wallet-card-info:hover .mud-avatar {
         box-shadow: 0 4px 14px rgba(6, 182, 212, 0.45) !important;
     }
-    .dark-theme .wallet-card-warning .mud-avatar,
-    .mud-theme-dark .wallet-card-warning .mud-avatar {
+    .dark-theme .wallet-card-warning:hover .mud-avatar,
+    .mud-theme-dark .wallet-card-warning:hover .mud-avatar {
         box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45) !important;
     }
-    .dark-theme .wallet-card-success .mud-avatar,
-    .mud-theme-dark .wallet-card-success .mud-avatar {
+    .dark-theme .wallet-card-success:hover .mud-avatar,
+    .mud-theme-dark .wallet-card-success:hover .mud-avatar {
         box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45) !important;
     }
 
@@ -231,7 +244,7 @@
 
         @* CARD: 3. Component Showcase *@
         <MudItem xs="12" sm="6" md="3">
-            <MudPaper Class="wallet-action-card wallet-card-warning pa-4 rounded-lg" Elevation="2" @onclick='() => NavManager.NavigateTo("/componentsdemo")'>
+            <MudPaper Class="wallet-action-card wallet-card-warning pa-4 rounded-lg" Elevation="2" @onclick='() => NavManager.NavigateTo("/components-demo")'>
                 <div class="d-flex align-center gap-3 mb-3">
                     <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large">
                         <MudIcon Icon="@Icons.Material.Outlined.Widgets" />

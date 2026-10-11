@@ -69,4 +69,14 @@ public class Order
     public bool IsDeleted { get; set; } = false;
 
     public List<OrderItem> Items { get; set; } = new();
+
+    [NotMapped]
+    public bool IsBranchPickup =>
+        !string.IsNullOrWhiteSpace(ShippingAddress) &&
+        (ShippingAddress.StartsWith("Branch:", StringComparison.OrdinalIgnoreCase) ||
+         ShippingAddress.Contains("Face-to-Face", StringComparison.OrdinalIgnoreCase) ||
+         ShippingAddress.Contains("In-Store", StringComparison.OrdinalIgnoreCase));
+
+    [NotMapped]
+    public string FulfillmentLabel => IsBranchPickup ? "Branch (Face-to-Face)" : "Delivery";
 }

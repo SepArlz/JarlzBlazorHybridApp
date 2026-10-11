@@ -1,102 +1,560 @@
-﻿@page "/products"
-@using GabsHybridApp.Shared.Data
+@page "/products"
 @using GabsHybridApp.Shared.Models
-@using Microsoft.EntityFrameworkCore
+@using GabsHybridApp.Shared.Services
+@using GabsHybridApp.Shared.Components.Products
+@using MudBlazor
+@inject IProductService ProductService
 @inject IFormFactor FormFactor
-@inject IDbContextFactory<HybridAppDbContext> DbFactory
 @inject ProductSyncService ProductSync
-@inject HttpClient Http
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
-<PageTitle>Products</PageTitle>
-<h1>Products</h1>
+<PageTitle>Product Catalog &amp; Analytics</PageTitle>
 
-<MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Variant="Variant.Outlined" Adornment=" Adornment.Start"
-              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Clearable="true"></MudTextField>
+<MudContainer MaxWidth="MaxWidth.False" Class="px-0 mt-4 mb-8">
+    @* DESIGN LANGUAGE: Page Hero Header — Operational title, icon badge, and action toolbar *@
+    <div class="d-flex justify-space-between align-center mb-4 flex-wrap gap-2">
+        <div class="d-flex align-center gap-3">
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                <MudIcon Icon="@Icons.Material.Outlined.Inventory2" Size="Size.Large" />
+            </MudAvatar>
+            <div>
+                <MudText Typo="Typo.h5" Class="font-weight-bold">Product Catalog</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Commercial Inventory, Multi-Variant Pricing &amp; Sales Popularity</MudText>
+            </div>
+        </div>
 
-<MudSimpleTable Hover="true" Class="products-css mb-5" Style="overflow-x: auto;">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th class="text-right">Price</th>
-            <th>Unit</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var productRow in products)
+        <div class="d-flex align-center gap-2 flex-wrap">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Outlined.Add"
+                       Size="Size.Small"
+                       OnClick="OpenAddProductDialog">
+                Add Product
+            </MudButton>
+
+            @if (!IsWeb)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Outlined.CloudSync" Size="Size.Small" Disabled="_syncing" OnClick="SyncNowAsync">
+                    @(_syncing ? "Syncing..." : "Sync Products")
+                </MudButton>
+            }
+
+            <MudTooltip Text="Refresh Catalog">
+                <MudIconButton Icon="@Icons.Material.Outlined.Refresh" Color="Color.Default" Size="Size.Small" OnClick="LoadDataAsync" />
+            </MudTooltip>
+        </div>
+    </div>
+
+    @* DESIGN LANGUAGE: KPI Metric Grid — Responsive 2x2 mobile wrap / 4-column desktop dashboard cards *@
+    <MudGrid Class="mb-4">
+        <MudItem xs="6" sm="3">
+            <MudPaper Outlined="true" Class="pa-3 rounded-lg">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total Products</MudText>
+                        <MudText Typo="Typo.h5" Class="font-weight-bold">@_summary.TotalProducts</MudText>
+                    </div>
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Medium">
+                        <MudIcon Icon="@Icons.Material.Outlined.Inventory" Size="Size.Small" />
+                    </MudAvatar>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Outlined="true" Class="pa-3 rounded-lg">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Packaging Units</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Secondary" Class="font-weight-bold">@_summary.TotalUnits</MudText>
+                    </div>
+                    <MudAvatar Color="Color.Secondary" Variant="Variant.Outlined" Size="Size.Medium">
+                        <MudIcon Icon="@Icons.Material.Outlined.Category" Size="Size.Small" />
+                    </MudAvatar>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Outlined="true" Class="pa-3 rounded-lg">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Average Price</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Info" Class="font-weight-bold">@_summary.AveragePrice.ToString("C")</MudText>
+                    </div>
+                    <MudAvatar Color="Color.Info" Variant="Variant.Outlined" Size="Size.Medium">
+                        <MudIcon Icon="@Icons.Material.Outlined.Payments" Size="Size.Small" />
+                    </MudAvatar>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Outlined="true" Class="pa-3 rounded-lg">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Top Seller</MudText>
+                        <MudText Typo="Typo.h6" Color="Color.Warning" Class="font-weight-bold text-truncate" Style="max-width: 130px;">
+                            @_summary.TopSellingProduct
+                        </MudText>
+                    </div>
+                    <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Medium">
+                        <MudIcon Icon="@Icons.Material.Outlined.Star" Size="Size.Small" />
+                    </MudAvatar>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    @* DESIGN LANGUAGE: Unified Action Bar — Name search, Sort selector & Filter controls *@
+    <MudPaper Elevation="1" Class="pa-3 mb-4 rounded-lg">
+        <div class="d-flex flex-wrap align-center justify-space-between gap-3">
+            @* Search field: strictly by Product Name for maximum accuracy *@
+            <div style="min-width: 260px; max-width: 380px;" class="flex-grow-1">
+                <MudTextField @bind-Value="_filter.SearchTerm"
+                              Placeholder="Search by product name..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Outlined.Search"
+                              Immediate="false"
+                              DebounceInterval="300"
+                              OnDebounceIntervalElapsed="LoadDataAsync"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Clearable="true"
+                              OnClearButtonClick="LoadDataAsync" />
+            </div>
+
+            @* Sorting and Filter Controls *@
+            <div class="d-flex align-center gap-2 flex-wrap flex-grow-1 justify-sm-end">
+                @* Sort selector dropdown without fire icon and without packaging unit *@
+                <div style="min-width: 180px;">
+                    <MudSelect T="ProductSortOption"
+                               Value="_filter.SortBy"
+                               ValueChanged="OnSortChanged"
+                               Dense="true"
+                               Margin="Margin.Dense"
+                               Variant="Variant.Outlined"
+                               AnchorOrigin="Origin.BottomLeft">
+                        <MudSelectItem Value="ProductSortOption.Name">Name (A-Z)</MudSelectItem>
+                        <MudSelectItem Value="ProductSortOption.Id">Product ID</MudSelectItem>
+                        <MudSelectItem Value="ProductSortOption.Price">Unit Price</MudSelectItem>
+                        <MudSelectItem Value="ProductSortOption.PopularityToday">Popularity: Today</MudSelectItem>
+                        <MudSelectItem Value="ProductSortOption.PopularityThisWeek">Popularity: This Week</MudSelectItem>
+                        <MudSelectItem Value="ProductSortOption.PopularityThisMonth">Popularity: This Month</MudSelectItem>
+                        <MudSelectItem Value="ProductSortOption.PopularityThisYear">Popularity: This Year</MudSelectItem>
+                    </MudSelect>
+                </div>
+
+                @* Sort direction toggle *@
+                <MudTooltip Text="@(_filter.SortDescending ? "Sorted Descending (click for Ascending)" : "Sorted Ascending (click for Descending)")">
+                    <MudIconButton Icon="@(_filter.SortDescending ? Icons.Material.Outlined.ArrowDownward : Icons.Material.Outlined.ArrowUpward)"
+                                   Color="Color.Primary"
+                                   Variant="Variant.Outlined"
+                                   Size="Size.Small"
+                                   OnClick="ToggleSortDirection" />
+                </MudTooltip>
+
+                @* Packaging Unit dropdown filter *@
+                <div style="min-width: 140px;">
+                    <MudSelect T="string"
+                               Value="_filter.SelectedUnit"
+                               ValueChanged="OnUnitFilterChanged"
+                               Dense="true"
+                               Margin="Margin.Dense"
+                               Variant="Variant.Outlined"
+                               Clearable="true"
+                               AnchorOrigin="Origin.BottomLeft"
+                               Placeholder="All Units">
+                        <MudSelectItem Value="@((string?)null)">All Units</MudSelectItem>
+                        @foreach (var unit in _distinctUnits)
+                        {
+                            <MudSelectItem Value="@unit">@unit</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+
+                @* Price Range Inputs *@
+                <div class="d-flex align-center gap-1" style="max-width: 240px;">
+                    <MudNumericField T="decimal?"
+                                     @bind-Value="_filter.MinPrice"
+                                     Placeholder="Min $"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     HideSpinButtons="true"
+                                     Immediate="false"
+                                     DebounceInterval="400"
+                                     OnDebounceIntervalElapsed="LoadDataAsync"
+                                     Clearable="true"
+                                     Style="width: 105px;" />
+                    <span class="mud-text-secondary font-weight-bold">-</span>
+                    <MudNumericField T="decimal?"
+                                     @bind-Value="_filter.MaxPrice"
+                                     Placeholder="Max $"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     HideSpinButtons="true"
+                                     Immediate="false"
+                                     DebounceInterval="400"
+                                     OnDebounceIntervalElapsed="LoadDataAsync"
+                                     Clearable="true"
+                                     Style="width: 105px;" />
+                </div>
+
+                @* Reset filters button *@
+                @if (_filter.HasActiveFilters)
+                {
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Error"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Outlined.FilterAltOff"
+                               OnClick="ClearFiltersAsync">
+                        Reset
+                    </MudButton>
+                }
+            </div>
+        </div>
+
+        @* Active Filter Badges *@
+        @if (_filter.HasActiveFilters)
         {
-            <tr>
-                <td>@productRow.Id</td>
-                <td>@productRow.Name</td>
-                <td class="text-right">@productRow.UnitPrice</td>
-                <td>@productRow.Unit</td>
-            </tr>
+            <div class="d-flex align-center gap-1 mt-2 flex-wrap">
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mr-1">Active Filters:</MudText>
+                @if (!string.IsNullOrWhiteSpace(_filter.SearchTerm))
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" OnClose="@(async () => { _filter.SearchTerm = string.Empty; await LoadDataAsync(); })">
+                        Name: @_filter.SearchTerm
+                    </MudChip>
+                }
+                @if (!string.IsNullOrWhiteSpace(_filter.SelectedUnit))
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined" OnClose="@(async () => { _filter.SelectedUnit = null; await LoadDataAsync(); })">
+                        Unit: @_filter.SelectedUnit
+                    </MudChip>
+                }
+                @if (_filter.MinPrice.HasValue || _filter.MaxPrice.HasValue)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined" OnClose="@(async () => { _filter.MinPrice = null; _filter.MaxPrice = null; await LoadDataAsync(); })">
+                        Price: @(_filter.MinPrice?.ToString("C") ?? "$0") - @(_filter.MaxPrice?.ToString("C") ?? "Any")
+                    </MudChip>
+                }
+            </div>
         }
-    </tbody>
-</MudSimpleTable>
+    </MudPaper>
+
+    @* DESIGN LANGUAGE: Responsive Table Container — Product Table (Receipt card mode on mobile <= 959px) *@
+    <MudPaper Elevation="0" Class="pa-0 pa-sm-4 mud-elevation-sm-3 bg-transparent bg-sm-surface rounded-lg">
+        <MudTable Items="_items"
+                  Loading="_isLoading"
+                  Elevation="0"
+                  Hover="true"
+                  Dense="true"
+                  RowsPerPage="25">
+            <HeaderContent>
+                <MudTh Style="width: 80px;">ID</MudTh>
+                <MudTh>Product Name</MudTh>
+                <MudTh Style="text-align: right; width: 120px;">Unit Price</MudTh>
+                <MudTh Style="text-align: center; width: 120px;">Packaging</MudTh>
+                <MudTh Style="text-align: right; width: 180px;">Sales Popularity</MudTh>
+                <MudTh Style="text-align: right; min-width: 110px;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                        #@context.Product.Id
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Product Name">
+                    <div>
+                        <div class="font-weight-bold">@context.Product.Name</div>
+                        @if (!string.IsNullOrWhiteSpace(context.Product.Description))
+                        {
+                            <div class="mud-text-secondary" style="font-size: 0.75rem;">@context.Product.Description</div>
+                        }
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Unit Price" Style="text-align: right;">
+                    <span class="font-weight-bold" style="color: var(--mud-palette-primary); font-size: 0.95rem;">
+                        @context.Product.UnitPrice.ToString("C")
+                    </span>
+                </MudTd>
+                <MudTd DataLabel="Packaging" Style="text-align: center;">
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Variant="Variant.Filled"
+                             Color="Color.Secondary">
+                        @(string.IsNullOrWhiteSpace(context.Product.Unit) ? "piece" : context.Product.Unit)
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Sales Popularity" Style="text-align: right;">
+                    @if (IsPopularitySortActive)
+                    {
+                        <div class="d-flex align-center justify-end gap-1">
+                            <span class="font-weight-bold">@context.GetPopularityCount(_filter.SortBy) sold</span>
+                            <span class="mud-text-secondary" style="font-size: 0.72rem;">(@GetPopularityScopeLabel(_filter.SortBy))</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-center justify-end gap-1">
+                            @if (context.SalesThisYear > 0)
+                            {
+                                <MudTooltip Text="@($"Today: {context.SalesToday} | Week: {context.SalesThisWeek} | Month: {context.SalesThisMonth} | Year: {context.SalesThisYear}")">
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default" Icon="@Icons.Material.Outlined.TrendingUp">
+                                        @context.SalesThisYear sold (yr)
+                                    </MudChip>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <span class="mud-text-secondary" style="font-size: 0.78rem;">No sales yet</span>
+                            }
+                        </div>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Actions" Style="text-align: right;">
+                    <MudButtonGroup Size="Size.Small" Variant="Variant.Text">
+                        <MudTooltip Text="Edit Product">
+                            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary" OnClick="@(() => OpenEditProductDialog(context.Product))" />
+                        </MudTooltip>
+                        <MudTooltip Text="Delete Product">
+                            <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline" Color="Color.Error" OnClick="@(() => DeleteProductAsync(context.Product))" />
+                        </MudTooltip>
+                    </MudButtonGroup>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="d-flex flex-column align-center justify-center py-8 text-secondary">
+                    <MudIcon Icon="@Icons.Material.Outlined.SearchOff" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.subtitle1">No matching products found.</MudText>
+                    <MudText Typo="Typo.caption">Try adjusting your search query, price range, or packaging unit filter.</MudText>
+                    @if (_filter.HasActiveFilters)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="mt-3" OnClick="ClearFiltersAsync">
+                            Clear All Filters
+                        </MudButton>
+                    }
+                </div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
+            </PagerContent>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
 
 @code {
-    List<Product> products = new();
-    Product product = new();
-    string strSearch = string.Empty;
+    private List<ProductViewItem> _items = new();
+    private List<string> _distinctUnits = new();
+    private ProductSummaryDto _summary = new();
+    private ProductFilterDto _filter = new() { SortBy = ProductSortOption.Id, SortDescending = false };
+    private bool _isLoading = true;
+    private bool _syncing = false;
 
-    bool IsWeb => string.Equals(FormFactor.GetFormFactor(), "Web", StringComparison.OrdinalIgnoreCase);
+    private bool IsWeb => string.Equals(FormFactor.GetFormFactor(), "Web", StringComparison.OrdinalIgnoreCase);
 
-    private void LoadProducts()
-    {
-        var _db = DbFactory.CreateDbContext();  
-        if (!string.IsNullOrEmpty(strSearch))
-            products = _db.Products.Where(x => x.Name!.ToLower().Contains(strSearch.ToLower())).ToList();
-        else
-            products = _db.Products.ToList();
-    }
+    private bool IsPopularitySortActive => _filter.SortBy is
+        ProductSortOption.PopularityToday or
+        ProductSortOption.PopularityThisWeek or
+        ProductSortOption.PopularityThisMonth or
+        ProductSortOption.PopularityThisYear;
 
     protected override async Task OnInitializedAsync()
     {
-        LoadProducts();
+        await LoadDistinctUnitsAsync();
+        await LoadSummaryAsync();
+        await LoadDataAsync();
+
         if (!IsWeb)
         {
-            await SyncNow();
-        }           
+            await SyncNowAsync();
+        }
     }
 
-    private void OnSearch(string text)
+    private async Task LoadDataAsync()
     {
-        strSearch = text;
-        LoadProducts();
-    }
-
-    bool _syncing;
-    private async Task SyncNow()
-    {
-        if (_syncing) return;
-        _syncing = true;
-
+        _isLoading = true;
         try
         {
-            // Keep the operation bounded so we never hang the UI
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-
-            // Swallows its own network errors and returns 0 on failure
-            await ProductSync.SyncAsync("admin", cts.Token);
+            _items = await ProductService.GetProductsAsync(_filter);
         }
-        catch (OperationCanceledException)
+        catch (Exception ex)
         {
-            // Optional: show a non-blocking toast/snackbar like "Sync timed out"
-        }
-        catch (Exception)
-        {
-            // Optional: show a non-blocking toast/snackbar like "Sync failed"
-            // Don't rethrow—just log if you have logging
+            Snackbar.Add($"Error loading products: {ex.Message}", Severity.Error);
         }
         finally
         {
-            _syncing = false;
-
-            // Always refresh local view; even if sync failed, this won’t crash
-            LoadProducts();
+            _isLoading = false;
             StateHasChanged();
         }
     }
 
+    private async Task LoadDistinctUnitsAsync()
+    {
+        try
+        {
+            _distinctUnits = await ProductService.GetDistinctUnitsAsync();
+        }
+        catch { }
+    }
+
+    private async Task LoadSummaryAsync()
+    {
+        try
+        {
+            _summary = await ProductService.GetProductSummaryAsync();
+        }
+        catch { }
+    }
+
+    private async Task OpenAddProductDialog()
+    {
+        var parameters = new DialogParameters<ProductFormDialog>
+        {
+            { x => x.ExistingUnits, _distinctUnits }
+        };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseButton = false
+        };
+
+        var dialog = await DialogService.ShowAsync<ProductFormDialog>("Add Product", parameters, options);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadDistinctUnitsAsync();
+            await LoadSummaryAsync();
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task OpenEditProductDialog(Product product)
+    {
+        var parameters = new DialogParameters<ProductFormDialog>
+        {
+            { x => x.ProductToEdit, product },
+            { x => x.ExistingUnits, _distinctUnits }
+        };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseButton = false
+        };
+
+        var dialog = await DialogService.ShowAsync<ProductFormDialog>("Edit Product", parameters, options);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadDistinctUnitsAsync();
+            await LoadSummaryAsync();
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task DeleteProductAsync(Product product)
+    {
+        bool? confirm = await DialogService.ShowMessageBoxAsync(
+            title: "Delete Product",
+            message: $"Are you sure you want to delete '{product.Name}' (ID #{product.Id}) from the product catalog?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            try
+            {
+                var deleted = await ProductService.DeleteProductAsync(product.Id);
+                if (deleted)
+                {
+                    Snackbar.Add($"Product '{product.Name}' deleted successfully.", Severity.Success);
+                    await LoadDistinctUnitsAsync();
+                    await LoadSummaryAsync();
+                    await LoadDataAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Failed to delete product: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task OnSortChanged(ProductSortOption option)
+    {
+        _filter.SortBy = option;
+        // Default popularity options to descending (highest first)
+        if (option is ProductSortOption.PopularityToday or
+            ProductSortOption.PopularityThisWeek or
+            ProductSortOption.PopularityThisMonth or
+            ProductSortOption.PopularityThisYear)
+        {
+            _filter.SortDescending = false; // our query engine treats false as highest-first for popularity
+        }
+        await LoadDataAsync();
+    }
+
+    private async Task ToggleSortDirection()
+    {
+        _filter.SortDescending = !_filter.SortDescending;
+        await LoadDataAsync();
+    }
+
+    private async Task OnUnitFilterChanged(string? unit)
+    {
+        _filter.SelectedUnit = unit;
+        await LoadDataAsync();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        _filter.SearchTerm = string.Empty;
+        _filter.SelectedUnit = null;
+        _filter.MinPrice = null;
+        _filter.MaxPrice = null;
+        _filter.SortBy = ProductSortOption.Id;
+        _filter.SortDescending = false;
+        await LoadDataAsync();
+    }
+
+    private string GetPopularityScopeLabel(ProductSortOption sort) => sort switch
+    {
+        ProductSortOption.PopularityToday => "today",
+        ProductSortOption.PopularityThisWeek => "this wk",
+        ProductSortOption.PopularityThisMonth => "this mo",
+        ProductSortOption.PopularityThisYear => "this yr",
+        _ => "total"
+    };
+
+    private async Task SyncNowAsync()
+    {
+        if (_syncing) return;
+        _syncing = true;
+        StateHasChanged();
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+            var count = await ProductSync.SyncAsync("admin", cts.Token);
+            if (count > 0)
+            {
+                Snackbar.Add($"Synced {count} products from cloud.", Severity.Success);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Snackbar.Add("Product sync timed out.", Severity.Warning);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Product sync failed: {ex.Message}", Severity.Warning);
+        }
+        finally
+        {
+            _syncing = false;
+            await LoadDistinctUnitsAsync();
+            await LoadSummaryAsync();
+            await LoadDataAsync();
+            StateHasChanged();
+        }
+    }
 }

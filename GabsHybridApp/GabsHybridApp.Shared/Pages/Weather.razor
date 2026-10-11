@@ -1,39 +1,55 @@
-﻿@page "/weather"
+@page "/weather"
 
-<PageTitle>Weather</PageTitle>
+<PageTitle>Weather Telemetry - Jarlz MotoHub</PageTitle>
 
-<h1>Weather</h1>
+@* DESIGN LANGUAGE: Page Hero Header — Operational title & icon badge *@
+<MudPaper Elevation="0" Class="pa-4 mb-4 rounded-lg bg-transparent">
+    <div class="d-flex align-center gap-3">
+        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+            <MudIcon Icon="@Icons.Material.Filled.WbSunny" Size="Size.Large" />
+        </MudAvatar>
+        <div>
+            <MudText Typo="Typo.h5" Color="Color.Primary"><b>Weather Telemetry</b></MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                Environmental metrics and operational temperature telemetry for field technicians
+            </MudText>
+        </div>
+    </div>
+</MudPaper>
 
-<p class="mb-2">This component demonstrates showing data.</p>
-
-@if (forecasts == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <MudSimpleTable>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-            }
-        </tbody>
-    </MudSimpleTable>
-}
+@* DESIGN LANGUAGE: Responsive Table Container *@
+<MudPaper Elevation="0" Class="pa-0 pa-sm-4 mud-elevation-sm-3 bg-transparent bg-sm-surface rounded-lg">
+    @if (forecasts == null)
+    {
+        <div class="d-flex justify-center align-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText Typo="Typo.body2" Class="ml-3 mud-text-secondary">Loading telemetry data...</MudText>
+        </div>
+    }
+    else
+    {
+        <MudTable Items="forecasts" Hover="true" Dense="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Date</MudTh>
+                <MudTh>Temp (C)</MudTh>
+                <MudTh>Temp (F)</MudTh>
+                <MudTh>Summary</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
+                <MudTd DataLabel="Temp (C)">
+                    <MudChip T="string" Size="Size.Small" Color="@(context.TemperatureC > 25 ? Color.Warning : (context.TemperatureC < 10 ? Color.Info : Color.Success))" Variant="Variant.Outlined">
+                        @context.TemperatureC°C
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Temp (F)">@context.TemperatureF°F</MudTd>
+                <MudTd DataLabel="Summary">
+                    <MudText Typo="Typo.body2" Class="font-weight-medium">@context.Summary</MudText>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
 
 @code {
     private WeatherForecast[]? forecasts;

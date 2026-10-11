@@ -61,6 +61,20 @@ public class OrderService : IOrderService
             query = query.Where(o => o.OrderDateUtc <= filter.ToDate.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(filter.FulfillmentType))
+        {
+            if (filter.FulfillmentType == "Branch")
+            {
+                query = query.Where(o => o.ShippingAddress != null &&
+                    (o.ShippingAddress.Contains("Branch") || o.ShippingAddress.Contains("Face-to-Face") || o.ShippingAddress.Contains("In-Store")));
+            }
+            else if (filter.FulfillmentType == "Delivery")
+            {
+                query = query.Where(o => o.ShippingAddress == null ||
+                    (!o.ShippingAddress.Contains("Branch") && !o.ShippingAddress.Contains("Face-to-Face") && !o.ShippingAddress.Contains("In-Store")));
+            }
+        }
+
         var totalCount = await query.CountAsync(ct);
 
         var page = Math.Max(1, filter.Page);
